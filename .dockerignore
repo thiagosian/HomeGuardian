@@ -1,0 +1,44 @@
+# Git
+.git/
+.gitignore
+
+# Node modules
+node_modules/
+package-lock.json
+
+# Development
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Documentation
+*.md
+!README.md
+
+# Frontend source (only include built dist)
+frontend/src/
+frontend/node_modules/
+frontend/package.json
+frontend/package-lock.json
+frontend/vite.config.js
+frontend/index.html
+
+# Build artifacts
+*.swp
+*.swo
+*~

@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Testing
+coverage/
+
+# SQLite
+*.db
+*.db-journal
+
+# SSH Keys (generated at runtime)
+*.pem
+*.key
+id_rsa*
+
+# Temporary files
+tmp/
+temp/

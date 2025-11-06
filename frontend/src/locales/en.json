@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "HomeGuardian",
+    "subtitle": "Git-Powered Configuration Manager"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "history": "History",
+    "items": "Items",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "overview": "System Overview",
+    "lastBackup": "Last Backup",
+    "status": "Status",
+    "backupNow": "Backup Now",
+    "clean": "Clean",
+    "modified": "Modified",
+    "pending": "Pending",
+    "synced": "Synced",
+    "gitStatus": "Git Status",
+    "fileWatcher": "File Watcher",
+    "remoteSync": "Remote Sync",
+    "running": "Running",
+    "stopped": "Stopped",
+    "configured": "Configured",
+    "notConfigured": "Not Configured"
+  },
+  "history": {
+    "title": "Backup History",
+    "commit": "Commit",
+    "message": "Message",
+    "date": "Date",
+    "author": "Author",
+    "viewDiff": "View Diff",
+    "restore": "Restore",
+    "noHistory": "No backup history found"
+  },
+  "items": {
+    "title": "Configuration Items",
+    "automations": "Automations",
+    "scripts": "Scripts",
+    "scenes": "Scenes",
+    "type": "Type",
+    "name": "Name",
+    "file": "File",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "noItems": "No items found"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "remote": "Remote Repository",
+    "remoteUrl": "Repository URL",
+    "authType": "Authentication Type",
+    "ssh": "SSH Key",
+    "token": "Personal Access Token",
+    "generateKey": "Generate SSH Key",
+    "publicKey": "Public Key",
+    "copyKey": "Copy Key",
+    "testConnection": "Test Connection",
+    "save": "Save",
+    "autoPush": "Auto Push",
+    "autoPushDesc": "Automatically push commits to remote repository",
+    "autoCommit": "Auto Commit",
+    "autoCommitDesc": "Automatically commit changes when detected",
+    "scheduledBackup": "Scheduled Backup",
+    "scheduledBackupDesc": "Create daily backups at specified time",
+    "backupTime": "Backup Time",
+    "excludeSecrets": "Exclude Secrets",
+    "excludeSecretsDesc": "Exclude secrets.yaml from backups"
+  },
+  "restore": {
+    "title": "Restore",
+    "confirm": "Are you sure you want to restore this item?",
+    "safetyBackup": "A safety backup will be created before restoration",
+    "success": "Restored successfully",
+    "failed": "Restoration failed",
+    "reloadConfig": "Reload Configuration",
+    "reloadSuccess": "Configuration reloaded successfully"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "refresh": "Refresh"
+  }
+}

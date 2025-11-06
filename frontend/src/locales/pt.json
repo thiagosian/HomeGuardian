@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "HomeGuardian",
+    "subtitle": "Gerenciador de Configuração com Git"
+  },
+  "nav": {
+    "dashboard": "Painel",
+    "history": "Histórico",
+    "items": "Itens",
+    "settings": "Configurações"
+  },
+  "dashboard": {
+    "title": "Painel",
+    "overview": "Visão Geral do Sistema",
+    "lastBackup": "Último Backup",
+    "status": "Status",
+    "backupNow": "Fazer Backup",
+    "clean": "Limpo",
+    "modified": "Modificado",
+    "pending": "Pendente",
+    "synced": "Sincronizado",
+    "gitStatus": "Status do Git",
+    "fileWatcher": "Monitor de Arquivos",
+    "remoteSync": "Sincronização Remota",
+    "running": "Em Execução",
+    "stopped": "Parado",
+    "configured": "Configurado",
+    "notConfigured": "Não Configurado"
+  },
+  "history": {
+    "title": "Histórico de Backups",
+    "commit": "Commit",
+    "message": "Mensagem",
+    "date": "Data",
+    "author": "Autor",
+    "viewDiff": "Ver Diferenças",
+    "restore": "Restaurar",
+    "noHistory": "Nenhum histórico de backup encontrado"
+  },
+  "items": {
+    "title": "Itens de Configuração",
+    "automations": "Automações",
+    "scripts": "Scripts",
+    "scenes": "Cenas",
+    "type": "Tipo",
+    "name": "Nome",
+    "file": "Arquivo",
+    "enabled": "Ativado",
+    "disabled": "Desativado",
+    "noItems": "Nenhum item encontrado"
+  },
+  "settings": {
+    "title": "Configurações",
+    "general": "Geral",
+    "remote": "Repositório Remoto",
+    "remoteUrl": "URL do Repositório",
+    "authType": "Tipo de Autenticação",
+    "ssh": "Chave SSH",
+    "token": "Token de Acesso Pessoal",
+    "generateKey": "Gerar Chave SSH",
+    "publicKey": "Chave Pública",
+    "copyKey": "Copiar Chave",
+    "testConnection": "Testar Conexão",
+    "save": "Salvar",
+    "autoPush": "Push Automático",
+    "autoPushDesc": "Enviar commits automaticamente para o repositório remoto",
+    "autoCommit": "Commit Automático",
+    "autoCommitDesc": "Criar commits automaticamente quando mudanças forem detectadas",
+    "scheduledBackup": "Backup Agendado",
+    "scheduledBackupDesc": "Criar backups diários no horário especificado",
+    "backupTime": "Horário do Backup",
+    "excludeSecrets": "Excluir Secrets",
+    "excludeSecretsDesc": "Excluir secrets.yaml dos backups"
+  },
+  "restore": {
+    "title": "Restaurar",
+    "confirm": "Tem certeza que deseja restaurar este item?",
+    "safetyBackup": "Um backup de segurança será criado antes da restauração",
+    "success": "Restaurado com sucesso",
+    "failed": "Falha na restauração",
+    "reloadConfig": "Recarregar Configuração",
+    "reloadSuccess": "Configuração recarregada com sucesso"
+  },
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "close": "Fechar",
+    "refresh": "Atualizar"
+  }
+}
