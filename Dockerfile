@@ -10,7 +10,10 @@ RUN apk add --no-cache \
     openssh \
     nodejs \
     npm \
-    sqlite
+    sqlite \
+    python3 \
+    make \
+    g++
 
 # Set working directory
 WORKDIR /app
