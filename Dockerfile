@@ -16,7 +16,7 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 # Build frontend
-COPY frontend/package*.json ./frontend/
+COPY frontend/package.json frontend/package-lock.json ./frontend/
 WORKDIR /app/frontend
 RUN npm ci
 COPY frontend/ ./
