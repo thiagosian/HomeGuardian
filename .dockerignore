@@ -4,7 +4,6 @@
 
 # Node modules
 node_modules/
-package-lock.json
 
 # Development
 .env
@@ -30,13 +29,9 @@ coverage/
 *.md
 !README.md
 
-# Frontend source (only include built dist)
-frontend/src/
+# Frontend build artifacts (node_modules will be installed during build)
 frontend/node_modules/
-frontend/package.json
-frontend/package-lock.json
-frontend/vite.config.js
-frontend/index.html
+frontend/dist/
 
 # Build artifacts
 *.swp
