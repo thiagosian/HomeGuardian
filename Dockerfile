@@ -43,7 +43,7 @@ LABEL \
     io.hass.description="Git-powered configuration manager for Home Assistant" \
     io.hass.version="1.0.0" \
     io.hass.type="addon" \
-    io.hass.arch="aarch64|amd64|armhf|armv7|i386"
+    io.hass.arch="aarch64|amd64|armhf|armv7"
 
 # Expose port
 EXPOSE 8099
