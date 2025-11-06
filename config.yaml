@@ -52,4 +52,3 @@ schema:
   parse_esphome: bool
   parse_packages: bool
   exclude_secrets: bool
-image: "ghcr.io/thiagosian/homeguardian-{arch}"

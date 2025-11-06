@@ -15,17 +15,20 @@ RUN apk add --no-cache \
 # Set working directory
 WORKDIR /app
 
-# Copy backend package files
-COPY backend/package*.json ./backend/
+# Build frontend
+COPY frontend/package*.json ./frontend/
+WORKDIR /app/frontend
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# Install backend dependencies
 WORKDIR /app/backend
+COPY backend/package*.json ./
 RUN npm ci --only=production
 
 # Copy backend source
 COPY backend/ ./
-
-# Copy frontend build
-WORKDIR /app
-COPY frontend/dist ./frontend/dist/
 
 # Copy run script
 COPY run.sh /
