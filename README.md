@@ -122,9 +122,13 @@ curl http://homeassistant.local:8123/api/hassio_ingress/xxx/api/status \
 
 ## Security
 
-- SSH keys and Personal Access Tokens are encrypted (AES-256) at rest
-- Uses Home Assistant's native authentication
-- `secrets.yaml` excluded by default (configurable)
+- **Automatic Encryption**: On first startup, HomeGuardian generates a unique 256-bit encryption key
+- **Data Protection**: SSH keys and Personal Access Tokens are encrypted (AES-256) at rest
+- **Secure Storage**: Encryption key stored in `/data/.encryption_key` with 600 permissions
+- **Home Assistant Auth**: Uses HA's native authentication - no custom auth layer
+- **Secrets Protection**: `secrets.yaml` excluded by default (configurable)
+
+See [SECURITY.md](SECURITY.md) for detailed security information and best practices.
 
 ## Development
 

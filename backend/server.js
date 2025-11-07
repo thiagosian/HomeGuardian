@@ -4,6 +4,14 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const logger = require('./utils/logger');
 const db = require('./config/database');
+const encryptionKeyManager = require('./utils/encryption-key-manager');
+const {
+  backupLimiter,
+  restoreLimiter,
+  settingsLimiter,
+  readLimiter,
+  statusLimiter
+} = require('./middleware/rate-limit');
 
 // Import routes
 const apiRoutes = require('./routes/api');
@@ -12,6 +20,7 @@ const historyRoutes = require('./routes/history');
 const restoreRoutes = require('./routes/restore');
 const settingsRoutes = require('./routes/settings');
 const statusRoutes = require('./routes/status');
+const notificationRoutes = require('./routes/notifications');
 
 // Import services
 const GitService = require('./services/git-service');
@@ -23,14 +32,42 @@ const PORT = process.env.PORT || 8099;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+
+// Limit request body size to prevent DoS attacks
+app.use(bodyParser.json({
+  limit: '1mb',
+  strict: true // Only accept arrays and objects
+}));
+
+app.use(bodyParser.urlencoded({
+  extended: true,
+  limit: '1mb'
+}));
+
+// Limit URL length
+app.use((req, res, next) => {
+  if (req.url.length > 2000) {
+    return res.status(414).json({
+      error: 'URL too long',
+      maxLength: 2000
+    });
+  }
+  next();
+});
 
 // Request logging
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.path}`);
   next();
 });
+
+// Apply rate limiters to API endpoints
+app.use('/api/backup', backupLimiter);
+app.use('/api/restore', restoreLimiter);
+app.use('/api/settings', settingsLimiter);
+app.use('/api/history', readLimiter);
+app.use('/api/status', statusLimiter);
+app.use('/api/notifications', readLimiter);
 
 // API Routes
 app.use('/api', apiRoutes);
@@ -39,6 +76,7 @@ app.use('/api/history', historyRoutes);
 app.use('/api/restore', restoreRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/status', statusRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
@@ -60,6 +98,10 @@ app.use((err, req, res, next) => {
 // Initialize services
 async function initializeServices() {
   try {
+    // Initialize encryption key FIRST (before database)
+    logger.info('Initializing encryption key...');
+    await encryptionKeyManager.initialize();
+
     logger.info('Initializing database...');
     await db.initialize();
 

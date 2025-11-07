@@ -71,6 +71,38 @@ const database = {
               reject(err);
               return;
             }
+          });
+
+          // Notifications table
+          db.run(`
+            CREATE TABLE IF NOT EXISTS notifications (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              type TEXT NOT NULL,
+              severity TEXT NOT NULL,
+              title TEXT NOT NULL,
+              message TEXT NOT NULL,
+              details TEXT,
+              read BOOLEAN DEFAULT 0,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              expires_at DATETIME
+            )
+          `, (err) => {
+            if (err) {
+              logger.error('Failed to create notifications table:', err);
+              reject(err);
+              return;
+            }
+          });
+
+          // Create indexes for notifications
+          db.run('CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read)');
+          db.run('CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC)');
+          db.run('CREATE INDEX IF NOT EXISTS idx_notifications_severity ON notifications(severity)', (err) => {
+            if (err) {
+              logger.error('Failed to create notification indexes:', err);
+              reject(err);
+              return;
+            }
 
             logger.info('Database tables initialized successfully');
             resolve();
