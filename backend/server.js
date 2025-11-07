@@ -5,6 +5,13 @@ const bodyParser = require('body-parser');
 const logger = require('./utils/logger');
 const db = require('./config/database');
 const encryptionKeyManager = require('./utils/encryption-key-manager');
+const {
+  backupLimiter,
+  restoreLimiter,
+  settingsLimiter,
+  readLimiter,
+  statusLimiter
+} = require('./middleware/rate-limit');
 
 // Import routes
 const apiRoutes = require('./routes/api');
@@ -52,6 +59,13 @@ app.use((req, res, next) => {
   logger.info(`${req.method} ${req.path}`);
   next();
 });
+
+// Apply rate limiters to API endpoints
+app.use('/api/backup', backupLimiter);
+app.use('/api/restore', restoreLimiter);
+app.use('/api/settings', settingsLimiter);
+app.use('/api/history', readLimiter);
+app.use('/api/status', statusLimiter);
 
 // API Routes
 app.use('/api', apiRoutes);
