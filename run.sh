@@ -17,6 +17,7 @@ export GIT_USER_EMAIL=$(bashio::config 'git_user_email')
 export PARSE_ESPHOME=$(bashio::config 'parse_esphome')
 export PARSE_PACKAGES=$(bashio::config 'parse_packages')
 export EXCLUDE_SECRETS=$(bashio::config 'exclude_secrets')
+export REMOTE_ENABLED=$(bashio::config 'remote_enabled')
 
 # Export Home Assistant environment variables
 export SUPERVISOR_TOKEN="${SUPERVISOR_TOKEN}"

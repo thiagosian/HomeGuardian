@@ -40,6 +40,7 @@ options:
   parse_esphome: false
   parse_packages: false
   exclude_secrets: true
+  remote_enabled: false
 schema:
   log_level: list(debug|info|warning|error)
   auto_commit_enabled: bool
@@ -52,3 +53,4 @@ schema:
   parse_esphome: bool
   parse_packages: bool
   exclude_secrets: bool
+  remote_enabled: bool
