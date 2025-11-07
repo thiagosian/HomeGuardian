@@ -1,5 +1,5 @@
 name: HomeGuardian
-version: "1.0.1"
+version: "1.0.2"
 slug: homeguardian
 description: Enterprise-grade Git version control for your Home Assistant configuration
 url: https://github.com/thiagosian/HomeGuardian
@@ -51,4 +51,3 @@ schema:
   parse_esphome: bool
   parse_packages: bool
   exclude_secrets: bool
-image: "ghcr.io/thiagosian/homeguardian-{arch}"
