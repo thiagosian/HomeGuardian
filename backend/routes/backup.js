@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../utils/logger');
+const { validate } = require('../middleware/validate');
+const { createBackupSchema } = require('../validation/schemas');
 
 /**
  * Trigger manual backup (create commit)
  */
-router.post('/now', async (req, res) => {
+router.post('/now', validate(createBackupSchema), async (req, res) => {
   try {
     const gitService = req.app.locals.gitService;
+    // req.body is already validated
     const { message } = req.body;
 
     const customMessage = message || `Manual backup: ${new Date().toISOString()}`;

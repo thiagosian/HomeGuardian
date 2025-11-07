@@ -3,23 +3,19 @@ const router = express.Router();
 const axios = require('axios');
 const logger = require('../utils/logger');
 const HAParser = require('../services/ha-parser');
+const { validate } = require('../middleware/validate');
+const { restoreFileSchema, restoreItemSchema, reloadDomainSchema } = require('../validation/schemas');
 
 const haParser = new HAParser();
 
 /**
  * Restore a file to a specific commit
  */
-router.post('/file', async (req, res) => {
+router.post('/file', validate(restoreFileSchema), async (req, res) => {
   try {
     const gitService = req.app.locals.gitService;
+    // req.body is already validated
     const { filePath, commitHash } = req.body;
-
-    if (!filePath || !commitHash) {
-      return res.status(400).json({
-        error: 'Missing required parameters',
-        required: ['filePath', 'commitHash']
-      });
-    }
 
     await gitService.restoreFile(filePath, commitHash);
 
@@ -41,17 +37,11 @@ router.post('/file', async (req, res) => {
 /**
  * Restore a specific item (automation, script, scene)
  */
-router.post('/item', async (req, res) => {
+router.post('/item', validate(restoreItemSchema), async (req, res) => {
   try {
     const gitService = req.app.locals.gitService;
+    // req.body is already validated
     const { type, id, commitHash } = req.body;
-
-    if (!type || !id || !commitHash) {
-      return res.status(400).json({
-        error: 'Missing required parameters',
-        required: ['type', 'id', 'commitHash']
-      });
-    }
 
     // Get item from commit
     const item = await haParser.getItem(type, id);
@@ -92,8 +82,9 @@ router.post('/item', async (req, res) => {
 /**
  * Reload Home Assistant configuration
  */
-router.post('/reload/:domain', async (req, res) => {
+router.post('/reload/:domain', validate(reloadDomainSchema, 'params'), async (req, res) => {
   try {
+    // req.params is already validated
     const { domain } = req.params;
 
     const supervisorToken = process.env.SUPERVISOR_TOKEN;
@@ -115,13 +106,6 @@ router.post('/reload/:domain', async (req, res) => {
     };
 
     const service = serviceMap[domain];
-
-    if (!service) {
-      return res.status(400).json({
-        error: 'Invalid domain',
-        validDomains: Object.keys(serviceMap)
-      });
-    }
 
     // Call HA API to reload
     const [serviceDomain, serviceName] = service.split('.');

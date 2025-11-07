@@ -2,17 +2,19 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../utils/logger');
 const HAParser = require('../services/ha-parser');
+const { validate } = require('../middleware/validate');
+const { historyQuerySchema, filePathQuerySchema } = require('../validation/schemas');
 
 const haParser = new HAParser();
 
 /**
  * Get commit history
  */
-router.get('/', async (req, res) => {
+router.get('/', validate(historyQuerySchema, 'query'), async (req, res) => {
   try {
     const gitService = req.app.locals.gitService;
-    const limit = parseInt(req.query.limit) || 50;
-    const offset = parseInt(req.query.offset) || 0;
+    // req.query is already validated and type-coerced
+    const { limit, offset } = req.query;
 
     const history = await gitService.getHistory(limit, offset);
 
@@ -60,17 +62,12 @@ router.get('/:commitHash', async (req, res) => {
 /**
  * Get diff for a specific file in a commit
  */
-router.get('/:commitHash/file', async (req, res) => {
+router.get('/:commitHash/file', validate(filePathQuerySchema, 'query'), async (req, res) => {
   try {
     const gitService = req.app.locals.gitService;
     const { commitHash } = req.params;
+    // req.query is already validated
     const { filePath } = req.query;
-
-    if (!filePath) {
-      return res.status(400).json({
-        error: 'Missing filePath parameter'
-      });
-    }
 
     const diff = await gitService.getFileDiff(filePath, commitHash);
 
@@ -92,17 +89,12 @@ router.get('/:commitHash/file', async (req, res) => {
 /**
  * Get content of a file at a specific commit
  */
-router.get('/:commitHash/content', async (req, res) => {
+router.get('/:commitHash/content', validate(filePathQuerySchema, 'query'), async (req, res) => {
   try {
     const gitService = req.app.locals.gitService;
     const { commitHash } = req.params;
+    // req.query is already validated
     const { filePath } = req.query;
-
-    if (!filePath) {
-      return res.status(400).json({
-        error: 'Missing filePath parameter'
-      });
-    }
 
     const content = await gitService.getFileContent(filePath, commitHash);
 

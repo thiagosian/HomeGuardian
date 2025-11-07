@@ -8,20 +8,21 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "body-parser": "^1.20.2",
-    "simple-git": "^3.21.0",
-    "chokidar": "^3.5.3",
-    "node-cron": "^3.0.3",
-    "sqlite3": "^5.1.6",
-    "js-yaml": "^4.1.0",
-    "diff": "^5.1.0",
     "axios": "^1.6.2",
-    "winston": "^3.11.0",
+    "body-parser": "^1.20.2",
+    "chokidar": "^3.5.3",
+    "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
+    "diff": "^5.1.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "js-yaml": "^4.1.0",
+    "node-cron": "^3.0.3",
     "node-ssh": "^13.1.0",
-    "dotenv": "^16.3.1"
+    "simple-git": "^3.21.0",
+    "sqlite3": "^5.1.6",
+    "winston": "^3.11.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

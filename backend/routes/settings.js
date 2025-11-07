@@ -7,6 +7,12 @@ const path = require('path');
 const logger = require('../utils/logger');
 const db = require('../config/database');
 const encryptionKeyManager = require('../utils/encryption-key-manager');
+const { validate } = require('../middleware/validate');
+const {
+  createSettingSchema,
+  remoteConfigSchema,
+  sshKeyGenerateSchema
+} = require('../validation/schemas');
 
 /**
  * Encrypt a value using the secure encryption key
@@ -69,15 +75,10 @@ router.get('/', async (req, res) => {
 /**
  * Update a setting
  */
-router.post('/', async (req, res) => {
+router.post('/', validate(createSettingSchema), async (req, res) => {
   try {
+    // req.body is already validated
     const { key, value, encrypted } = req.body;
-
-    if (!key) {
-      return res.status(400).json({
-        error: 'Missing required parameter: key'
-      });
-    }
 
     let finalValue = value;
 
@@ -110,7 +111,8 @@ router.post('/', async (req, res) => {
 /**
  * Generate SSH key pair
  */
-router.post('/ssh/generate', async (req, res) => {
+router.post('/ssh/generate', validate(sshKeyGenerateSchema), async (req, res) => {
+  const { keyType, keySize } = req.body;
   try {
     const dataPath = process.env.DATA_PATH || '/data';
     const sshDir = path.join(dataPath, 'ssh');
@@ -190,16 +192,11 @@ router.get('/ssh/public-key', async (req, res) => {
 /**
  * Configure remote repository
  */
-router.post('/remote', async (req, res) => {
+router.post('/remote', validate(remoteConfigSchema), async (req, res) => {
   try {
     const gitService = req.app.locals.gitService;
+    // req.body is already validated
     const { remoteUrl, authType, token } = req.body;
-
-    if (!remoteUrl) {
-      return res.status(400).json({
-        error: 'Missing required parameter: remoteUrl'
-      });
-    }
 
     // Store remote URL
     await db.run(

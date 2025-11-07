@@ -24,8 +24,28 @@ const PORT = process.env.PORT || 8099;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+
+// Limit request body size to prevent DoS attacks
+app.use(bodyParser.json({
+  limit: '1mb',
+  strict: true // Only accept arrays and objects
+}));
+
+app.use(bodyParser.urlencoded({
+  extended: true,
+  limit: '1mb'
+}));
+
+// Limit URL length
+app.use((req, res, next) => {
+  if (req.url.length > 2000) {
+    return res.status(414).json({
+      error: 'URL too long',
+      maxLength: 2000
+    });
+  }
+  next();
+});
 
 // Request logging
 app.use((req, res, next) => {
