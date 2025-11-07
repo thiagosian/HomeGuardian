@@ -8,6 +8,7 @@ class HAParser {
     this.configPath = process.env.CONFIG_PATH || '/config';
     this.parseESPHome = process.env.PARSE_ESPHOME === 'true';
     this.parsePackages = process.env.PARSE_PACKAGES === 'true';
+    this.backupLovelace = process.env.BACKUP_LOVELACE !== 'false'; // Default to true
   }
 
   /**
@@ -174,22 +175,236 @@ class HAParser {
   }
 
   /**
+   * Parse ESPHome device configurations
+   */
+  async parseESPHome() {
+    try {
+      const items = [];
+      const esphomeDir = path.join(this.configPath, 'esphome');
+
+      // Check if ESPHome directory exists
+      const exists = await this.fileExists(esphomeDir);
+
+      if (!exists) {
+        logger.debug('ESPHome directory not found');
+        return items;
+      }
+
+      const files = await fs.readdir(esphomeDir);
+
+      for (const file of files) {
+        if (file.endsWith('.yaml') || file.endsWith('.yml')) {
+          const filePath = path.join(esphomeDir, file);
+
+          try {
+            const content = await fs.readFile(filePath, 'utf8');
+            const config = yaml.load(content);
+
+            if (config && config.esphome) {
+              items.push({
+                id: config.esphome.name || file.replace(/\.ya?ml$/, ''),
+                type: 'esphome',
+                name: config.esphome.name || file.replace(/\.ya?ml$/, ''),
+                description: config.esphome.comment || '',
+                platform: config.esphome.platform || config.esp32?.board || config.esp8266?.board || 'unknown',
+                board: config.esphome.board || config.esp32?.board || config.esp8266?.board || 'unknown',
+                file: path.join('esphome', file),
+                raw: config
+              });
+            }
+          } catch (error) {
+            logger.warn(`Failed to parse ESPHome config ${file}: ${error.message}`);
+          }
+        }
+      }
+
+      logger.info(`Parsed ${items.length} ESPHome device(s)`);
+      return items;
+    } catch (error) {
+      logger.error('Failed to parse ESPHome configurations:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Parse packages directory
+   */
+  async parsePackages() {
+    try {
+      const items = [];
+      const packagesDir = path.join(this.configPath, 'packages');
+
+      // Check if packages directory exists
+      const exists = await this.fileExists(packagesDir);
+
+      if (!exists) {
+        logger.debug('Packages directory not found');
+        return items;
+      }
+
+      const files = await fs.readdir(packagesDir);
+
+      for (const file of files) {
+        if (file.endsWith('.yaml') || file.endsWith('.yml')) {
+          const filePath = path.join(packagesDir, file);
+
+          try {
+            const content = await fs.readFile(filePath, 'utf8');
+            const config = yaml.load(content);
+
+            if (config) {
+              // Extract package components
+              const components = Object.keys(config).filter(key =>
+                !key.startsWith('_') && typeof config[key] === 'object'
+              );
+
+              items.push({
+                id: file.replace(/\.ya?ml$/, ''),
+                type: 'package',
+                name: file.replace(/\.ya?ml$/, '').replace(/_/g, ' '),
+                description: config.description || `Package with ${components.length} component(s)`,
+                components: components,
+                file: path.join('packages', file),
+                raw: config
+              });
+            }
+          } catch (error) {
+            logger.warn(`Failed to parse package ${file}: ${error.message}`);
+          }
+        }
+      }
+
+      logger.info(`Parsed ${items.length} package(s)`);
+      return items;
+    } catch (error) {
+      logger.error('Failed to parse packages:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Parse Lovelace dashboards from .storage
+   */
+  async parseLovelaceDashboards() {
+    try {
+      const items = [];
+      const storageDir = path.join(this.configPath, '.storage');
+
+      // Check if .storage directory exists
+      const exists = await this.fileExists(storageDir);
+
+      if (!exists) {
+        logger.debug('.storage directory not found');
+        return items;
+      }
+
+      const files = await fs.readdir(storageDir);
+
+      for (const file of files) {
+        if (file.startsWith('lovelace')) {
+          const filePath = path.join(storageDir, file);
+
+          try {
+            const content = await fs.readFile(filePath, 'utf8');
+            const data = JSON.parse(content);
+
+            if (data && data.data) {
+              const dashboardName = file === 'lovelace'
+                ? 'Main Dashboard'
+                : file.replace('lovelace.', '').replace(/_/g, ' ');
+
+              const viewCount = data.data.config?.views?.length || 0;
+
+              items.push({
+                id: file,
+                type: 'lovelace_dashboard',
+                name: data.data.config?.title || dashboardName,
+                description: `${viewCount} view(s)`,
+                file: path.join('.storage', file),
+                views: viewCount,
+                raw: data
+              });
+            }
+          } catch (error) {
+            logger.warn(`Failed to parse Lovelace dashboard ${file}: ${error.message}`);
+          }
+        }
+      }
+
+      logger.info(`Parsed ${items.length} Lovelace dashboard(s)`);
+      return items;
+    } catch (error) {
+      logger.error('Failed to parse Lovelace dashboards:', error);
+      return [];
+    }
+  }
+
+  /**
    * Parse all HA items
    */
   async parseAllItems() {
     try {
-      const [automations, scripts, scenes] = await Promise.all([
+      const promises = [
         this.parseAutomations(),
         this.parseScripts(),
         this.parseScenes()
-      ]);
+      ];
 
-      return {
-        automations,
-        scripts,
-        scenes,
-        total: automations.length + scripts.length + scenes.length
+      // Add ESPHome parsing if enabled
+      if (this.parseESPHome) {
+        promises.push(this.parseESPHome());
+      }
+
+      // Add packages parsing if enabled
+      if (this.parsePackages) {
+        promises.push(this.parsePackages());
+      }
+
+      // Add Lovelace parsing if enabled
+      if (this.backupLovelace) {
+        promises.push(this.parseLovelaceDashboards());
+      }
+
+      const results = await Promise.all(promises);
+
+      const response = {
+        automations: results[0],
+        scripts: results[1],
+        scenes: results[2]
       };
+
+      let total = results[0].length + results[1].length + results[2].length;
+      let resultIndex = 3;
+
+      // Add ESPHome to response if enabled
+      if (this.parseESPHome) {
+        response.esphome = results[resultIndex];
+        total += results[resultIndex].length;
+        resultIndex++;
+      } else {
+        response.esphome = [];
+      }
+
+      // Add packages to response if enabled
+      if (this.parsePackages) {
+        response.packages = results[resultIndex];
+        total += results[resultIndex].length;
+        resultIndex++;
+      } else {
+        response.packages = [];
+      }
+
+      // Add Lovelace to response if enabled
+      if (this.backupLovelace) {
+        response.lovelace = results[resultIndex];
+        total += results[resultIndex].length;
+      } else {
+        response.lovelace = [];
+      }
+
+      response.total = total;
+
+      return response;
     } catch (error) {
       logger.error('Failed to parse all items:', error);
       throw error;
@@ -212,6 +427,15 @@ class HAParser {
           break;
         case 'scene':
           items = await this.parseScenes();
+          break;
+        case 'esphome':
+          items = await this.parseESPHome();
+          break;
+        case 'package':
+          items = await this.parsePackages();
+          break;
+        case 'lovelace_dashboard':
+          items = await this.parseLovelaceDashboards();
           break;
         default:
           throw new Error(`Unknown item type: ${type}`);

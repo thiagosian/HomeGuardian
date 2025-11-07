@@ -112,16 +112,22 @@ export default function Items() {
       )}
 
       <Card>
-        <Tabs value={tabValue} onChange={handleTabChange}>
+        <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
           <Tab label={`${t('items.automations')} (${items?.automations?.length || 0})`} />
           <Tab label={`${t('items.scripts')} (${items?.scripts?.length || 0})`} />
           <Tab label={`${t('items.scenes')} (${items?.scenes?.length || 0})`} />
+          <Tab label={`${t('items.esphome')} (${items?.esphome?.length || 0})`} />
+          <Tab label={`${t('items.packages')} (${items?.packages?.length || 0})`} />
+          <Tab label={`${t('items.dashboards')} (${items?.lovelace?.length || 0})`} />
         </Tabs>
 
         <CardContent>
           {tabValue === 0 && renderItemTable(items?.automations || [], 'automation')}
           {tabValue === 1 && renderItemTable(items?.scripts || [], 'script')}
           {tabValue === 2 && renderItemTable(items?.scenes || [], 'scene')}
+          {tabValue === 3 && renderItemTable(items?.esphome || [], 'esphome')}
+          {tabValue === 4 && renderItemTable(items?.packages || [], 'package')}
+          {tabValue === 5 && renderItemTable(items?.lovelace || [], 'lovelace')}
         </CardContent>
       </Card>
 

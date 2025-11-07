@@ -63,6 +63,7 @@ class GitService {
   async createGitignore() {
     const gitignorePath = path.join(this.configPath, '.gitignore');
     const excludeSecrets = process.env.EXCLUDE_SECRETS === 'true';
+    const backupLovelace = process.env.BACKUP_LOVELACE !== 'false'; // Default to true
 
     const defaultIgnores = [
       '# HomeGuardian default exclusions',
@@ -72,7 +73,6 @@ class GitService {
       '*.log',
       'home-assistant.log*',
       'home-assistant_v2.db*',
-      '.storage/lovelace*',
       '.cloud/',
       '.google.token',
       'www/community/',
@@ -84,6 +84,11 @@ class GitService {
       '.uuid',
       ''
     ];
+
+    // Conditionally exclude Lovelace dashboards
+    if (!backupLovelace) {
+      defaultIgnores.splice(7, 0, '.storage/lovelace*');
+    }
 
     if (excludeSecrets) {
       defaultIgnores.push('# Secrets excluded by HomeGuardian');

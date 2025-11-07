@@ -1,5 +1,5 @@
 name: HomeGuardian
-version: "1.0.6"
+version: "1.1.0"
 slug: homeguardian
 description: Enterprise-grade Git version control for your Home Assistant configuration
 url: https://github.com/thiagosian/HomeGuardian
@@ -36,8 +36,9 @@ options:
   scheduled_backup_time: "03:00"
   git_user_name: "HomeGuardian"
   git_user_email: "homeguardian@homeassistant.local"
-  parse_esphome: false
-  parse_packages: false
+  parse_esphome: true
+  parse_packages: true
+  backup_lovelace: true
   exclude_secrets: true
   remote_enabled: false
 schema:
@@ -51,5 +52,6 @@ schema:
   git_user_email: str
   parse_esphome: bool
   parse_packages: bool
+  backup_lovelace: bool
   exclude_secrets: bool
   remote_enabled: bool

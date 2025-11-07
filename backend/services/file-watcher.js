@@ -20,6 +20,8 @@ class FileWatcher {
     }
 
     try {
+      const backupLovelace = process.env.BACKUP_LOVELACE !== 'false'; // Default to true
+
       // Files and directories to ignore
       const ignored = [
         '**/node_modules/**',
@@ -29,7 +31,6 @@ class FileWatcher {
         '**/home-assistant_v2.db*',
         '**/*.db',
         '**/*.db-journal',
-        '**/.storage/lovelace*',
         '**/.cloud/**',
         '**/deps/**',
         '**/tts/**',
@@ -37,6 +38,11 @@ class FileWatcher {
         '**/.HA_VERSION',
         '**/.uuid'
       ];
+
+      // Conditionally exclude Lovelace dashboards
+      if (!backupLovelace) {
+        ignored.push('**/.storage/lovelace*');
+      }
 
       this.watcher = chokidar.watch(this.configPath, {
         ignored: ignored,
