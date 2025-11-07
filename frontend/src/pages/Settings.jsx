@@ -51,6 +51,7 @@ export default function Settings() {
   // Parsing options
   const [parseEsphome, setParseEsphome] = useState(false)
   const [parsePackages, setParsePackages] = useState(false)
+  const [backupLovelace, setBackupLovelace] = useState(true)
   const [excludeSecrets, setExcludeSecrets] = useState(true)
 
   // Remote repository settings
@@ -88,6 +89,7 @@ export default function Settings() {
       // Parsing options
       setParseEsphome(s.parse_esphome === 'true' || s.parse_esphome === true)
       setParsePackages(s.parse_packages === 'true' || s.parse_packages === true)
+      setBackupLovelace(s.backup_lovelace !== 'false' && s.backup_lovelace !== false)
       setExcludeSecrets(s.exclude_secrets !== 'false' && s.exclude_secrets !== false)
 
       // Remote repository settings
@@ -131,6 +133,7 @@ export default function Settings() {
       await api.settings.update('git_user_email', gitUserEmail, false)
       await api.settings.update('parse_esphome', parseEsphome.toString(), false)
       await api.settings.update('parse_packages', parsePackages.toString(), false)
+      await api.settings.update('backup_lovelace', backupLovelace.toString(), false)
       await api.settings.update('exclude_secrets', excludeSecrets.toString(), false)
       await api.settings.update('remote_enabled', remoteEnabled.toString(), false)
       await api.settings.update('auto_push_enabled', autoPushEnabled.toString(), false)
@@ -415,6 +418,19 @@ export default function Settings() {
                 label={t('settings.parsePackages')}
               />
               <FormHelperText>{t('settings.parsePackagesDesc')}</FormHelperText>
+            </Grid>
+
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={backupLovelace}
+                    onChange={(e) => setBackupLovelace(e.target.checked)}
+                  />
+                }
+                label={t('settings.backupLovelace')}
+              />
+              <FormHelperText>{t('settings.backupLovelaceDesc')}</FormHelperText>
             </Grid>
 
             <Grid item xs={12}>

@@ -5,6 +5,62 @@ All notable changes to HomeGuardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-11-07
+
+### Added
+- **ESPHome Configuration Parsing**: Fully implemented ESPHome device configuration parsing
+  - Parses all ESPHome YAML files from `/config/esphome/` directory
+  - Displays device name, platform, board, and components
+  - New "ESPHome" tab in Items page showing all configured devices
+  - Toggle now functional in Settings page (`parse_esphome` option)
+
+- **Packages Directory Parsing**: Fully implemented packages directory parsing
+  - Parses all package YAML files from `/config/packages/` directory
+  - Extracts package components and configuration
+  - New "Packages" tab in Items page showing all packages
+  - Toggle now functional in Settings page (`parse_packages` option)
+
+- **Lovelace Dashboard Backup**: Implemented Lovelace dashboard backup and parsing
+  - Parses all Lovelace dashboard JSON files from `/config/.storage/lovelace*`
+  - Displays dashboard title, view count, and configuration
+  - New "Dashboards" tab in Items page showing all dashboards
+  - **Lovelace now included in backups by default** (previously excluded)
+  - New `backup_lovelace` setting to control dashboard backup (default: true)
+  - Configurable via Settings page
+
+- **Enhanced Items Page UI**:
+  - Added 3 new tabs: ESPHome, Packages, and Dashboards
+  - Scrollable tabs for better mobile experience
+  - Displays total count for each category
+  - All 6 categories now fully functional
+
+- **Translations**: Added complete Portuguese and English translations for new features
+  - ESPHome items translation
+  - Packages items translation
+  - Dashboards items translation
+  - Settings descriptions for new options
+
+### Changed
+- **Default Configuration**: ESPHome and Packages parsing now enabled by default
+- **Backup Scope**: Lovelace dashboards now included in backups by default
+- **File Watcher**: Conditionally excludes Lovelace based on `backup_lovelace` setting
+- **Git Ignore**: Conditionally excludes Lovelace based on `backup_lovelace` setting
+
+### Fixed
+- **ESPHome Toggle**: ESPHome toggle in Settings page now works (implementation was missing)
+- **Packages Toggle**: Packages toggle in Settings page now works (implementation was missing)
+- **Lovelace Exclusion**: Lovelace dashboards were being excluded from backups, now included by default
+
+### Technical Details
+- Added `parseESPHome()` method in HAParser service
+- Added `parsePackages()` method in HAParser service
+- Added `parseLovelaceDashboards()` method in HAParser service
+- Updated `parseAllItems()` to include all new parsers with conditional execution
+- Updated `getItem()` to support new item types (esphome, package, lovelace_dashboard)
+- Enhanced frontend Items.jsx with scrollable tabs and new data display
+- Added `backup_lovelace` environment variable support in GitService and FileWatcher
+- All parsing operations run in parallel using `Promise.all()` for optimal performance
+
 ## [1.0.6] - 2025-11-07
 
 ### Added
