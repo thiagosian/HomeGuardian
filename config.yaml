@@ -1,5 +1,6 @@
 name: HomeGuardian
-version: "1.0.3"
+version: "1.0.5"
+version: "1.0.5"
 slug: homeguardian
 description: Enterprise-grade Git version control for your Home Assistant configuration
 url: https://github.com/thiagosian/HomeGuardian
