@@ -6,9 +6,27 @@ const fs = require('fs').promises;
 const path = require('path');
 const logger = require('../utils/logger');
 const db = require('../config/database');
+const encryptionKeyManager = require('../utils/encryption-key-manager');
 
-// Encryption key (in production, this should come from a secure source)
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'homeguardian-default-key-change-me';
+/**
+ * Encrypt a value using the secure encryption key
+ * @param {string} value - Value to encrypt
+ * @returns {string} Encrypted value
+ */
+function encrypt(value) {
+  const key = encryptionKeyManager.getKey();
+  return crypto.AES.encrypt(value, key).toString();
+}
+
+/**
+ * Decrypt a value using the secure encryption key
+ * @param {string} encryptedValue - Encrypted value
+ * @returns {string} Decrypted value
+ */
+function decrypt(encryptedValue) {
+  const key = encryptionKeyManager.getKey();
+  return crypto.AES.decrypt(encryptedValue, key).toString(crypto.enc.Utf8);
+}
 
 /**
  * Get all settings
@@ -25,7 +43,7 @@ router.get('/', async (req, res) => {
       // Decrypt if encrypted
       if (setting.encrypted) {
         try {
-          value = crypto.AES.decrypt(value, ENCRYPTION_KEY).toString(crypto.enc.Utf8);
+          value = decrypt(value);
         } catch (error) {
           logger.error(`Failed to decrypt setting ${setting.key}:`, error);
           value = null;
@@ -65,7 +83,7 @@ router.post('/', async (req, res) => {
 
     // Encrypt if requested
     if (encrypted) {
-      finalValue = crypto.AES.encrypt(value, ENCRYPTION_KEY).toString();
+      finalValue = encrypt(value);
     }
 
     await db.run(
@@ -117,7 +135,7 @@ router.post('/ssh/generate', async (req, res) => {
     const privateKey = await fs.readFile(privateKeyPath, 'utf8');
 
     // Encrypt private key and store in database
-    const encryptedPrivateKey = crypto.AES.encrypt(privateKey, ENCRYPTION_KEY).toString();
+    const encryptedPrivateKey = encrypt(privateKey);
 
     await db.run(
       'INSERT INTO ssh_keys (public_key, private_key_encrypted) VALUES (?, ?)',
@@ -197,7 +215,7 @@ router.post('/remote', async (req, res) => {
 
     // Store token if provided (encrypted)
     if (token) {
-      const encryptedToken = crypto.AES.encrypt(token, ENCRYPTION_KEY).toString();
+      const encryptedToken = encrypt(token);
       await db.run(
         'INSERT OR REPLACE INTO settings (key, value, encrypted) VALUES (?, ?, ?)',
         ['remote_token', encryptedToken, 1]

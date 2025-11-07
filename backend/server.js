@@ -4,6 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const logger = require('./utils/logger');
 const db = require('./config/database');
+const encryptionKeyManager = require('./utils/encryption-key-manager');
 
 // Import routes
 const apiRoutes = require('./routes/api');
@@ -60,6 +61,10 @@ app.use((err, req, res, next) => {
 // Initialize services
 async function initializeServices() {
   try {
+    // Initialize encryption key FIRST (before database)
+    logger.info('Initializing encryption key...');
+    await encryptionKeyManager.initialize();
+
     logger.info('Initializing database...');
     await db.initialize();
 
