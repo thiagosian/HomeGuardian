@@ -5,6 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import App from './App.jsx'
 import './i18n'
+import { getRouterBasename } from './config/ingress'
 
 const theme = createTheme({
   palette: {
@@ -18,9 +19,13 @@ const theme = createTheme({
   },
 });
 
+// Detect ingress base path for Home Assistant compatibility
+const basename = getRouterBasename();
+console.log('[HomeGuardian] Router basename:', basename);
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <App />

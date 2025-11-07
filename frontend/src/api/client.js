@@ -1,6 +1,11 @@
 import axios from 'axios';
+import { getApiBaseUrl } from '../config/ingress';
 
-const API_BASE_URL = './api';
+// Dynamically detect API base URL for Home Assistant ingress compatibility
+const API_BASE_URL = getApiBaseUrl();
+
+console.log('[HomeGuardian] API Base URL:', API_BASE_URL);
+console.log('[HomeGuardian] Current pathname:', window.location.pathname);
 
 const client = axios.create({
   baseURL: API_BASE_URL,
