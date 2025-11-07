@@ -5,6 +5,27 @@ All notable changes to HomeGuardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2025-11-07
+
+### Added
+- Comprehensive settings UI with all configuration options
+- `remote_enabled` option to make remote repository feature optional (default: disabled)
+- Complete translations for all settings in English and Portuguese
+- Visual organization of settings into logical sections:
+  - General (Language, Log Level)
+  - Backup & Commit (Auto Commit, Debounce, Scheduled Backups, Git User Info)
+  - Parsing Options (ESPHome, Packages, Secrets)
+  - Remote Repository (Optional feature with toggle)
+
+### Changed
+- Remote repository configuration now hidden by default and only shown when enabled
+- Improved settings UI with proper labels and descriptions for all options
+- Enhanced i18n with descriptive labels instead of technical field names
+- Settings organized into separate cards for better UX
+
+### Fixed
+- Added `.storage` to `.gitignore` to exclude Home Assistant storage files from backups
+
 ## [1.0.0] - 2025-11-06
 
 ### Added

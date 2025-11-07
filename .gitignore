@@ -38,3 +38,6 @@ id_rsa*
 # Temporary files
 tmp/
 temp/
+
+# Home Assistant storage files
+.storage
