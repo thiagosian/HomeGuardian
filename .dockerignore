@@ -64,7 +64,6 @@ Dockerfile*
 # Frontend build artifacts
 frontend/node_modules/
 frontend/dist/
-frontend/src/
 frontend/.vite/
 
 # Build artifacts
