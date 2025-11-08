@@ -54,6 +54,13 @@ hacsFrontendPackage.version = version;
 fs.writeFileSync(hacsFrontendPackagePath, JSON.stringify(hacsFrontendPackage, null, 2) + '\n');
 console.log('✓ Updated hacs-frontend/package.json');
 
+// Update hacs-frontend/custom_components/homeguardian_ui/manifest.json
+const hacsManifestPath = path.join(__dirname, '../../hacs-frontend/custom_components/homeguardian_ui/manifest.json');
+const hacsManifest = JSON.parse(fs.readFileSync(hacsManifestPath, 'utf8'));
+hacsManifest.version = version;
+fs.writeFileSync(hacsManifestPath, JSON.stringify(hacsManifest, null, 2) + '\n');
+console.log('✓ Updated hacs-frontend manifest.json');
+
 // Update package-lock.json files
 console.log('Updating package-lock.json files...');
 try {
@@ -68,6 +75,16 @@ try {
   console.log('✓ Updated frontend/package-lock.json');
 } catch (error) {
   console.warn('⚠ Warning: Failed to update frontend/package-lock.json');
+}
+
+// Build hacs-frontend to generate dist files
+console.log('Building hacs-frontend...');
+try {
+  execSync('cd hacs-frontend && npm install && npm run build', { stdio: 'inherit' });
+  console.log('✓ Built hacs-frontend dist files');
+} catch (error) {
+  console.error('✗ Error: Failed to build hacs-frontend');
+  process.exit(1);
 }
 
 console.log(`\n✅ Successfully updated all files to version ${version}`);
