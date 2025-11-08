@@ -27,9 +27,11 @@ import {
 } from '@mui/icons-material'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api/client'
+import { useTheme as useAppTheme } from '../contexts/ThemeContext'
 
 export default function Settings() {
   const { t, i18n } = useTranslation()
+  const { currentTheme, setTheme } = useAppTheme()
   const [settings, setSettings] = useState({})
   const [publicKey, setPublicKey] = useState('')
   const [loading, setLoading] = useState(true)
@@ -282,6 +284,21 @@ export default function Settings() {
                   <MenuItem value="error">Error</MenuItem>
                 </Select>
                 <FormHelperText>{t('settings.logLevelDesc')}</FormHelperText>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Theme</InputLabel>
+                <Select
+                  value={currentTheme}
+                  label="Theme"
+                  onChange={(e) => setTheme(e.target.value)}
+                >
+                  <MenuItem value="classic">Classic</MenuItem>
+                  <MenuItem value="modern">Modern</MenuItem>
+                </Select>
+                <FormHelperText>Choose your preferred UI theme</FormHelperText>
               </FormControl>
             </Grid>
           </Grid>
