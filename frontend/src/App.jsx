@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import Layout from './components/Layout'
+import ErrorBoundary from './components/ErrorBoundary'
 
 // Lazy load pages for code splitting
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -18,16 +19,20 @@ const LoadingFallback = () => (
 
 function App() {
   return (
-    <Layout>
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/items" element={<Items />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
-      </Suspense>
-    </Layout>
+    <ErrorBoundary>
+      <Layout>
+        <Suspense fallback={<LoadingFallback />}>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/items" element={<Items />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
+          </ErrorBoundary>
+        </Suspense>
+      </Layout>
+    </ErrorBoundary>
   )
 }
 
