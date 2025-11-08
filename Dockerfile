@@ -1,11 +1,15 @@
 # ARG for base image - must be declared before first FROM in multi-stage builds
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.22
+ARG BUILD_FROM
 
 # STAGE 1: Build Frontend
 # This stage installs ALL dependencies (including devDependencies like Vite)
 # needed for building the frontend, then compiles it to static files
-FROM node:20-alpine AS frontend-builder
+# Using Home Assistant base image ensures compatibility across all architectures
+FROM ${BUILD_FROM} AS frontend-builder
 WORKDIR /app/frontend
+# Install Node.js for building frontend
+# Using Node.js from Alpine repos ensures compatibility across all architectures
+RUN apk add --no-cache nodejs npm
 # Copy package files first for better Docker layer caching
 COPY frontend/package*.json ./
 # Install all dependencies including devDependencies (Vite, Tailwind, etc.)
@@ -18,12 +22,20 @@ RUN npm run build
 # STAGE 2: Build Backend Dependencies
 # Backend only needs production dependencies since there's no build step
 # node_modules will be copied to the final image for runtime
-FROM node:20-alpine AS backend-builder
+# Using Home Assistant base image ensures compatibility across all architectures
+FROM ${BUILD_FROM} AS backend-builder
 WORKDIR /app/backend
-# Install build tools needed for compiling native modules (sqlite3, node-ssh, etc.)
-# python3-dev is required for node-gyp to compile native addons
-# py3-setuptools provides distutils which node-gyp requires
-RUN apk add --no-cache python3 python3-dev py3-setuptools make g++
+# Install Node.js and build tools needed for compiling native modules
+# Node.js from apk works reliably across all architectures (amd64, aarch64, armv7, armhf)
+# python3-dev and py3-setuptools are required for node-gyp to compile native addons
+RUN apk add --no-cache \
+    nodejs \
+    npm \
+    python3 \
+    python3-dev \
+    py3-setuptools \
+    make \
+    g++
 COPY backend/package*.json ./
 RUN npm ci --only=production
 
