@@ -1,0 +1,14 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HomeGuardian UI",
+        "description": "Set up the HomeGuardian UI integration to access version control features directly in your Home Assistant interface."
+      }
+    },
+    "abort": {
+      "already_configured": "HomeGuardian UI is already configured."
+    }
+  },
+  "title": "HomeGuardian UI"
+}
