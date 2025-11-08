@@ -1,0 +1,5 @@
+# This file triggers semantic-release to create the initial tag v1.5.3
+# After this PR is merged, semantic-release will:
+# 1. Detect this is the first release
+# 2. Create tag v1.5.3 from commit 0b0de4c
+# 3. Subsequent commits will increment from 1.5.3 -> 1.5.4
