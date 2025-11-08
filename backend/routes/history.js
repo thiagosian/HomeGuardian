@@ -8,6 +8,12 @@ const { historyQuerySchema, filePathQuerySchema } = require('../validation/schem
 
 const haParser = new HAParser();
 
+// Configurable cache TTL for HA items parsing (in milliseconds)
+// - 300000 (5 min): Fast systems, frequent updates
+// - 1800000 (30 min): Default for RPi 3+ (recommended)
+// - 600000 (10 min): Slow systems like RPi Zero
+const CACHE_TTL_MS = parseInt(process.env.CACHE_TTL_MS || '1800000');
+
 /**
  * Get commit history
  */
@@ -138,7 +144,7 @@ router.get('/items/all', async (req, res) => {
         types: types ? types.split(',') : null,
         sequential: true // Parse sequentially to reduce memory spike
       });
-      cache.set(cacheKey, items, 300000); // 5 min TTL
+      cache.set(cacheKey, items, CACHE_TTL_MS);
     } else {
       logger.debug('Returning cached HA items');
     }

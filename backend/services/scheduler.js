@@ -2,10 +2,13 @@ const cron = require('node-cron');
 const logger = require('../utils/logger');
 
 class Scheduler {
-  constructor(gitService) {
+  constructor(gitService, database = null) {
     this.gitService = gitService;
+    this.database = database;
     this.scheduledTime = process.env.SCHEDULED_BACKUP_TIME || '03:00';
+    this.retentionDays = parseInt(process.env.BACKUP_RETENTION_DAYS || '365');
     this.cronJob = null;
+    this.maintenanceCronJob = null;
     this.isRunning = false;
   }
 
@@ -31,6 +34,14 @@ class Scheduler {
         logger.info('Scheduled backup starting...');
         await this.performScheduledBackup();
       });
+
+      // Schedule daily database maintenance at 03:30 (30 minutes after backup)
+      if (this.database) {
+        this.maintenanceCronJob = cron.schedule('30 3 * * *', async () => {
+          logger.info('Database maintenance starting...');
+          await this.performDatabaseMaintenance();
+        });
+      }
 
       this.isRunning = true;
       logger.info(`Scheduler started. Backups scheduled for ${this.scheduledTime} daily`);
@@ -67,6 +78,21 @@ class Scheduler {
     }
   }
 
+  async performDatabaseMaintenance() {
+    if (!this.database) {
+      logger.warn('Database maintenance skipped: database not configured');
+      return;
+    }
+
+    try {
+      logger.info(`Running database maintenance (retention: ${this.retentionDays} days)...`);
+      await this.database.archiveOldBackups(this.retentionDays);
+      logger.info('Database maintenance completed successfully');
+    } catch (error) {
+      logger.error('Database maintenance failed:', error);
+    }
+  }
+
   stop() {
     if (!this.isRunning) {
       logger.warn('Scheduler is not running');
@@ -76,6 +102,11 @@ class Scheduler {
     if (this.cronJob) {
       this.cronJob.stop();
       this.cronJob = null;
+    }
+
+    if (this.maintenanceCronJob) {
+      this.maintenanceCronJob.stop();
+      this.maintenanceCronJob = null;
     }
 
     this.isRunning = false;
