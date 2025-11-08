@@ -26,8 +26,8 @@ export default defineConfig({
         // Manual chunk splitting for better caching
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'mui-core': ['@mui/material', '@emotion/react', '@emotion/styled'],
-          'mui-icons': ['@mui/icons-material'],
+          'radix-ui': ['@radix-ui/react-dialog', '@radix-ui/react-tabs', '@radix-ui/react-switch', '@radix-ui/react-select'],
+          'lucide': ['lucide-react'],
           'i18n': ['i18next', 'react-i18next'],
         },
         // Better file naming for cache optimization

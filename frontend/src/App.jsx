@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { Box, CircularProgress } from '@mui/material'
+import { Loader2 } from 'lucide-react'
 import Layout from './components/Layout'
 
 // Lazy load pages for code splitting
@@ -11,30 +11,23 @@ const Items = lazy(() => import('./pages/Items'))
 
 // Loading component
 const LoadingFallback = () => (
-  <Box
-    display="flex"
-    justifyContent="center"
-    alignItems="center"
-    minHeight="400px"
-  >
-    <CircularProgress />
-  </Box>
+  <div className="flex justify-center items-center min-h-[400px]">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
 )
 
 function App() {
   return (
-    <Box sx={{ display: 'flex', height: '100vh' }}>
-      <Layout>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/items" element={<Items />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </Suspense>
-      </Layout>
-    </Box>
+    <Layout>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/items" element={<Items />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </Suspense>
+    </Layout>
   )
 }
 
