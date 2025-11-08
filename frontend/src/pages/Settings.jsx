@@ -11,14 +11,14 @@ import {
 import { useTheme } from '../contexts/ThemeContext'
 
 const THEME_OPTIONS = [
-  { value: 'classic-light', label: 'Classic Light', icon: Sun },
-  { value: 'classic-dark', label: 'Classic Dark', icon: Moon },
-  { value: 'new-light', label: 'New Light', icon: Sun },
-  { value: 'new-dark', label: 'New Dark', icon: Moon },
+  { value: 'countess-light', label: 'Countess Light', icon: Sun },
+  { value: 'countess-dark', label: 'Countess Dark', icon: Moon },
+  { value: 'mono-light', label: 'Mono Light', icon: Sun },
+  { value: 'mono-dark', label: 'Mono Dark', icon: Moon },
 ]
 
 export default function Settings() {
-  const { theme, setTheme, isDark, isClassicTheme, isNewTheme } = useTheme()
+  const { theme, setTheme, isDark, isCountessTheme, isMonoTheme } = useTheme()
 
   return (
     <div className="space-y-6">
@@ -57,7 +57,7 @@ export default function Settings() {
             <div className="flex items-center gap-2">
               <span className="font-medium">Theme Type:</span>
               <span className="text-muted-foreground">
-                {isClassicTheme ? 'Classic' : 'New'}
+                {isCountessTheme ? 'Countess' : 'Mono'}
               </span>
             </div>
           </div>

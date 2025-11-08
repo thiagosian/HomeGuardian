@@ -2,17 +2,21 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 
 const THEME_STORAGE_KEY = 'homeguardian-theme';
 
-// Available themes: classic (light/dark) and new (light/dark)
-const VALID_THEMES = ['classic-light', 'classic-dark', 'new-light', 'new-dark'];
+// Available themes: countess (light/dark) and mono (light/dark)
+const VALID_THEMES = ['countess-light', 'countess-dark', 'mono-light', 'mono-dark'];
 
 /**
  * Convert legacy localStorage values to new theme names
- * classic → classic-light
- * modern → classic-dark
+ * classic → countess-light
+ * modern → countess-dark
  */
 const migrateOldTheme = (oldValue) => {
-  if (oldValue === 'classic') return 'classic-light';
-  if (oldValue === 'modern') return 'classic-dark';
+  if (oldValue === 'classic') return 'countess-light';
+  if (oldValue === 'modern') return 'countess-dark';
+  if (oldValue === 'classic-light') return 'countess-light';
+  if (oldValue === 'classic-dark') return 'countess-dark';
+  if (oldValue === 'new-light') return 'mono-light';
+  if (oldValue === 'new-dark') return 'mono-dark';
   return oldValue;
 };
 
@@ -22,22 +26,22 @@ const migrateOldTheme = (oldValue) => {
 const isDarkTheme = (theme) => theme.endsWith('-dark');
 
 /**
- * Determine if a theme is classic
+ * Determine if a theme is countess
  */
-const isClassicTheme = (theme) => theme.startsWith('classic-');
+const isCountessTheme = (theme) => theme.startsWith('countess-');
 
 /**
- * Determine if a theme is new
+ * Determine if a theme is mono
  */
-const isNewTheme = (theme) => theme.startsWith('new-');
+const isMonoTheme = (theme) => theme.startsWith('mono-');
 
 // Create context
 const ThemeContext = createContext({
-  theme: 'classic-light',
+  theme: 'countess-light',
   setTheme: () => {},
   isDark: false,
-  isClassicTheme: true,
-  isNewTheme: false,
+  isCountessTheme: true,
+  isMonoTheme: false,
 });
 
 /**
@@ -55,7 +59,7 @@ export const useTheme = () => {
  * ThemeProvider component - simplified without MUI
  */
 export const ThemeProvider = ({ children }) => {
-  // Initialize theme from localStorage or default to 'classic-light'
+  // Initialize theme from localStorage or default to 'countess-light'
   const [theme, setCurrentTheme] = useState(() => {
     try {
       const saved = localStorage.getItem(THEME_STORAGE_KEY);
@@ -65,9 +69,9 @@ export const ThemeProvider = ({ children }) => {
         const oldTheme = localStorage.getItem('homeguardian-theme-preference');
         if (oldTheme) {
           const migrated = migrateOldTheme(oldTheme);
-          return VALID_THEMES.includes(migrated) ? migrated : 'classic-light';
+          return VALID_THEMES.includes(migrated) ? migrated : 'countess-light';
         }
-        return 'classic-light';
+        return 'countess-light';
       }
 
       // Check if saved value is valid, otherwise migrate
@@ -77,10 +81,10 @@ export const ThemeProvider = ({ children }) => {
 
       // Try to migrate old format
       const migrated = migrateOldTheme(saved);
-      return VALID_THEMES.includes(migrated) ? migrated : 'classic-light';
+      return VALID_THEMES.includes(migrated) ? migrated : 'countess-light';
     } catch (error) {
       console.error('[ThemeProvider] Error loading theme from localStorage:', error);
-      return 'classic-light';
+      return 'countess-light';
     }
   });
 
@@ -122,8 +126,8 @@ export const ThemeProvider = ({ children }) => {
       theme,
       setTheme,
       isDark: isDarkTheme(theme),
-      isClassicTheme: isClassicTheme(theme),
-      isNewTheme: isNewTheme(theme),
+      isCountessTheme: isCountessTheme(theme),
+      isMonoTheme: isMonoTheme(theme),
     }),
     [theme]
   );

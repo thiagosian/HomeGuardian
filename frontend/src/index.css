@@ -7,10 +7,10 @@
    ============================================================================
 
    4 Temas disponíveis:
-   - [data-theme="classic-light"] - Original HomeGuardian (Cyan/Orange)
-   - [data-theme="classic-dark"]  - Classic em Dark Mode
-   - [data-theme="new-light"]     - Novo tema moderno Light
-   - [data-theme="new-dark"]      - Novo tema moderno Dark (padrão atual)
+   - [data-theme="countess-light"] - Original HomeGuardian (Cyan/Orange)
+   - [data-theme="countess-dark"]  - Countess em Dark Mode
+   - [data-theme="mono-light"]     - Novo tema moderno Light
+   - [data-theme="mono-dark"]      - Novo tema moderno Dark (padrão atual)
 
    Estrutura de variáveis HSL para fácil manipulação:
    --variable: H S% L%;
@@ -20,11 +20,11 @@
 @layer base {
 
   /* ==========================================================================
-     CLASSIC LIGHT THEME - Original HomeGuardian
+     COUNTESS LIGHT THEME - Original HomeGuardian
      Inspirado no GitHub Light, com cyan e orange vibrantes
      ========================================================================== */
 
-  [data-theme="classic-light"],
+  [data-theme="countess-light"],
   :root:not(.dark):not([data-theme]) {
     /* Backgrounds */
     --background: 0 0% 98%;                    /* #fafafa */
@@ -92,11 +92,11 @@
   }
 
   /* ==========================================================================
-     CLASSIC DARK THEME - Classic em Dark Mode
-     Mantém cores Classic (cyan/orange) mas em fundo escuro
+     COUNTESS DARK THEME - Countess em Dark Mode
+     Mantém cores Countess (cyan/orange) mas em fundo escuro
      ========================================================================== */
 
-  [data-theme="classic-dark"] {
+  [data-theme="countess-dark"] {
     /* Backgrounds */
     --background: 220 13% 10%;                 /* #181b1f - GitHub dark */
     --foreground: 0 0% 98%;                    /* #fafafa */
@@ -163,11 +163,11 @@
   }
 
   /* ==========================================================================
-     NEW LIGHT THEME - Moderno e clean
+     MONO LIGHT THEME - Moderno e clean
      Inspirado em Linear, Vercel, shadcn/ui
      ========================================================================== */
 
-  [data-theme="new-light"] {
+  [data-theme="mono-light"] {
     /* Backgrounds */
     --background: 0 0% 100%;                   /* #ffffff */
     --foreground: 240 10% 3.9%;                /* #09090b */
@@ -234,11 +234,11 @@
   }
 
   /* ==========================================================================
-     NEW DARK THEME - Moderno com neon accents (PADRÃO ATUAL)
+     MONO DARK THEME - Moderno com neon accents (PADRÃO ATUAL)
      Inspirado em Railway, Linear Dark, Modern Dev Tools
      ========================================================================== */
 
-  [data-theme="new-dark"],
+  [data-theme="mono-dark"],
   .dark {
     /* Backgrounds */
     --background: 0 0% 3.9%;                   /* #0a0a0a - Quase preto */
@@ -312,16 +312,16 @@
 
   /* ==========================================================================
      TYPOGRAPHY SYSTEM
-     Classic: System fonts, mais conservador
-     New: Inter-like, mais moderno e bold
+     Countess: System fonts, mais conservador
+     Mono: Inter-like, mais moderno e bold
      ========================================================================== */
 
-  [data-theme="classic-light"],
-  [data-theme="classic-dark"] {
+  [data-theme="countess-light"],
+  [data-theme="countess-dark"] {
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-    /* Typography scale - Classic */
+    /* Typography scale - Countess */
     --text-xs: 0.75rem;      /* 12px */
     --text-sm: 0.875rem;     /* 14px */
     --text-base: 1rem;       /* 16px */
@@ -331,7 +331,7 @@
     --text-3xl: 1.875rem;    /* 30px */
     --text-4xl: 2.25rem;     /* 36px */
 
-    /* Font weights - Classic */
+    /* Font weights - Countess */
     --font-normal: 400;
     --font-medium: 500;
     --font-semibold: 600;
@@ -343,12 +343,12 @@
     --leading-relaxed: 1.75;
   }
 
-  [data-theme="new-light"],
-  [data-theme="new-dark"] {
+  [data-theme="mono-light"],
+  [data-theme="mono-dark"] {
     --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-    /* Typography scale - New (maior contraste) */
+    /* Typography scale - Mono (maior contraste) */
     --text-xs: 0.75rem;      /* 12px */
     --text-sm: 0.875rem;     /* 14px */
     --text-base: 1rem;       /* 16px */
@@ -358,7 +358,7 @@
     --text-3xl: 2.25rem;     /* 36px - maior */
     --text-4xl: 3rem;        /* 48px - maior */
 
-    /* Font weights - New (mais bold) */
+    /* Font weights - Mono (mais bold) */
     --font-normal: 400;
     --font-medium: 500;
     --font-semibold: 600;
@@ -377,12 +377,12 @@
 
   /* ==========================================================================
      SPACING SYSTEM
-     Classic: Espaçamento padrão
-     New: Espaçamento mais generoso
+     Countess: Espaçamento padrão
+     Mono: Espaçamento mais generoso
      ========================================================================== */
 
-  [data-theme="classic-light"],
-  [data-theme="classic-dark"] {
+  [data-theme="countess-light"],
+  [data-theme="countess-dark"] {
     --spacing-xs: 0.25rem;   /* 4px */
     --spacing-sm: 0.5rem;    /* 8px */
     --spacing-md: 1rem;      /* 16px */
@@ -391,8 +391,8 @@
     --spacing-2xl: 3rem;     /* 48px */
   }
 
-  [data-theme="new-light"],
-  [data-theme="new-dark"] {
+  [data-theme="mono-light"],
+  [data-theme="mono-dark"] {
     --spacing-xs: 0.5rem;    /* 8px - maior */
     --spacing-sm: 0.75rem;   /* 12px - maior */
     --spacing-md: 1.25rem;   /* 20px - maior */
@@ -403,12 +403,12 @@
 
   /* ==========================================================================
      BORDER RADIUS
-     Classic: Mais quadrado (4-6px)
-     New: Mais arredondado (8-12px)
+     Countess: Mais quadrado (4-6px)
+     Mono: Mais arredondado (8-12px)
      ========================================================================== */
 
-  [data-theme="classic-light"],
-  [data-theme="classic-dark"] {
+  [data-theme="countess-light"],
+  [data-theme="countess-dark"] {
     --radius-sm: 0.25rem;    /* 4px */
     --radius-md: 0.375rem;   /* 6px */
     --radius-lg: 0.5rem;     /* 8px */
@@ -416,8 +416,8 @@
     --radius-full: 9999px;   /* Círculo completo */
   }
 
-  [data-theme="new-light"],
-  [data-theme="new-dark"] {
+  [data-theme="mono-light"],
+  [data-theme="mono-dark"] {
     --radius-sm: 0.375rem;   /* 6px */
     --radius-md: 0.5rem;     /* 8px */
     --radius-lg: 0.75rem;    /* 12px */
@@ -549,17 +549,17 @@
   }
 
   /* Glow effects (apenas dark themes) */
-  [data-theme="new-dark"] .glow-primary,
+  [data-theme="mono-dark"] .glow-primary,
   .dark .glow-primary {
     box-shadow: var(--glow-primary);
   }
 
-  [data-theme="new-dark"] .glow-success,
+  [data-theme="mono-dark"] .glow-success,
   .dark .glow-success {
     box-shadow: var(--glow-success);
   }
 
-  [data-theme="new-dark"] .glow-error,
+  [data-theme="mono-dark"] .glow-error,
   .dark .glow-error {
     box-shadow: var(--glow-error);
   }
@@ -569,28 +569,28 @@
    CUSTOM SCROLLBAR (Dark themes only)
    ============================================================================== */
 
-[data-theme="classic-dark"] *::-webkit-scrollbar,
-[data-theme="new-dark"] *::-webkit-scrollbar,
+[data-theme="countess-dark"] *::-webkit-scrollbar,
+[data-theme="mono-dark"] *::-webkit-scrollbar,
 .dark *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-[data-theme="classic-dark"] *::-webkit-scrollbar-track,
-[data-theme="new-dark"] *::-webkit-scrollbar-track,
+[data-theme="countess-dark"] *::-webkit-scrollbar-track,
+[data-theme="mono-dark"] *::-webkit-scrollbar-track,
 .dark *::-webkit-scrollbar-track {
   background: hsl(var(--background));
 }
 
-[data-theme="classic-dark"] *::-webkit-scrollbar-thumb,
-[data-theme="new-dark"] *::-webkit-scrollbar-thumb,
+[data-theme="countess-dark"] *::-webkit-scrollbar-thumb,
+[data-theme="mono-dark"] *::-webkit-scrollbar-thumb,
 .dark *::-webkit-scrollbar-thumb {
   background: hsl(var(--muted));
   border-radius: 4px;
 }
 
-[data-theme="classic-dark"] *::-webkit-scrollbar-thumb:hover,
-[data-theme="new-dark"] *::-webkit-scrollbar-thumb:hover,
+[data-theme="countess-dark"] *::-webkit-scrollbar-thumb:hover,
+[data-theme="mono-dark"] *::-webkit-scrollbar-thumb:hover,
 .dark *::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
 }
