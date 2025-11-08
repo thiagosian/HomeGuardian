@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  homeguardian:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: homeguardian
+    ports:
+      - "8099:8099"
+    volumes:
+      - ./data:/data
+      - ./config:/config
+    environment:
+      - NODE_ENV=production
+      - DATA_PATH=/data
+      - CONFIG_PATH=/config
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8099/api/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - homeguardian-network
+
+networks:
+  homeguardian-network:
+    driver: bridge
+
+volumes:
+  data:
+  config:

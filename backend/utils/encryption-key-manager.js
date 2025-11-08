@@ -132,18 +132,168 @@ class EncryptionKeyManager {
   }
 
   /**
-   * Rotate encryption key (for future use)
-   * @returns {Promise<Object>} The old and new encryption keys
+   * Encrypt data using current key
+   * @param {string} plaintext - Data to encrypt
+   * @returns {string} Encrypted data
+   */
+  encrypt(plaintext) {
+    const cryptoManager = require('./crypto-manager');
+    return cryptoManager.encrypt(plaintext, this.getKey());
+  }
+
+  /**
+   * Decrypt data using current key
+   * @param {string} ciphertext - Data to decrypt
+   * @returns {string} Decrypted data
+   */
+  decrypt(ciphertext) {
+    const cryptoManager = require('./crypto-manager');
+    return cryptoManager.decrypt(ciphertext, this.getKey());
+  }
+
+  /**
+   * Rotate encryption key and re-encrypt all data
+   * @returns {Promise<Object>} Migration statistics
    */
   async rotateKey() {
+    const db = require('../config/database');
+    const cryptoManager = require('./crypto-manager');
+
+    if (this.rotationInProgress) {
+      throw new Error('Key rotation already in progress');
+    }
+
+    this.rotationInProgress = true;
     const oldKey = this.key;
-    const newKey = await this.generateKey();
+    const newKey = crypto.randomBytes(32).toString('hex');
 
-    // TODO: Re-encrypt all encrypted data in database
-    logger.warn('Key rotation: Re-encryption of existing data required');
+    const stats = {
+      sshKeys: { total: 0, success: 0, failed: 0 },
+      settings: { total: 0, success: 0, failed: 0 },
+      startTime: Date.now(),
+      endTime: null,
+      duration: null
+    };
 
-    this.key = newKey;
-    return { oldKey, newKey };
+    try {
+      logger.info('Starting key rotation...');
+
+      // 1. Re-encrypt SSH Keys
+      const sshKeys = await new Promise((resolve, reject) => {
+        db.all('SELECT id, private_key_encrypted FROM ssh_keys', (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        });
+      });
+
+      stats.sshKeys.total = sshKeys.length;
+
+      for (const sshKey of sshKeys) {
+        try {
+          const decrypted = cryptoManager.decrypt(sshKey.private_key_encrypted, oldKey);
+          const reencrypted = cryptoManager.encrypt(decrypted, newKey);
+
+          await new Promise((resolve, reject) => {
+            db.run(
+              'UPDATE ssh_keys SET private_key_encrypted = ? WHERE id = ?',
+              [reencrypted, sshKey.id],
+              (err) => {
+                if (err) reject(err);
+                else resolve();
+              }
+            );
+          });
+
+          stats.sshKeys.success++;
+        } catch (error) {
+          stats.sshKeys.failed++;
+          logger.error(`Failed to re-encrypt SSH key ${sshKey.id}:`, error);
+        }
+      }
+
+      // 2. Re-encrypt Settings
+      const settings = await new Promise((resolve, reject) => {
+        db.all('SELECT key, value FROM settings WHERE encrypted = 1', (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        });
+      });
+
+      stats.settings.total = settings.length;
+
+      for (const setting of settings) {
+        try {
+          const decrypted = cryptoManager.decrypt(setting.value, oldKey);
+          const reencrypted = cryptoManager.encrypt(decrypted, newKey);
+
+          await new Promise((resolve, reject) => {
+            db.run(
+              'UPDATE settings SET value = ? WHERE key = ?',
+              [reencrypted, setting.key],
+              (err) => {
+                if (err) reject(err);
+                else resolve();
+              }
+            );
+          });
+
+          stats.settings.success++;
+        } catch (error) {
+          stats.settings.failed++;
+          logger.error(`Failed to re-encrypt setting ${setting.key}:`, error);
+        }
+      }
+
+      // 3. Verify success
+      const totalFailed = stats.sshKeys.failed + stats.settings.failed;
+      if (totalFailed > 0) {
+        throw new Error(`Key rotation partially failed: ${totalFailed} items failed`);
+      }
+
+      // 4. Backup old key
+      const backupPath = `${this.keyPath}.backup.${Date.now()}`;
+      await fs.writeFile(backupPath, oldKey, { mode: 0o600 });
+      logger.info(`Old key backed up to ${backupPath}`);
+
+      // 5. Save new key
+      await this.saveKey(newKey);
+      this.key = newKey;
+
+      // 6. Record rotation in history
+      await new Promise((resolve, reject) => {
+        db.run(
+          `INSERT INTO settings (key, value, encrypted) VALUES (?, ?, ?)`,
+          [
+            `key_rotation_${Date.now()}`,
+            JSON.stringify({
+              timestamp: Date.now(),
+              itemsReencrypted: stats.sshKeys.success + stats.settings.success,
+              oldKeyHash: cryptoManager.hash(oldKey).substring(0, 16),
+              newKeyHash: cryptoManager.hash(newKey).substring(0, 16)
+            }),
+            0
+          ],
+          (err) => {
+            if (err) reject(err);
+            else resolve();
+          }
+        );
+      });
+
+      stats.endTime = Date.now();
+      stats.duration = stats.endTime - stats.startTime;
+
+      logger.info('Key rotation completed successfully', stats);
+      return stats;
+
+    } catch (error) {
+      logger.error('Key rotation failed:', error);
+      // Revert to old key
+      this.key = oldKey;
+      throw error;
+    } finally {
+      this.rotationInProgress = false;
+    }
   }
 
   /**

@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const crypto = require('crypto-js');
 const { NodeSSH } = require('node-ssh');
 const fs = require('fs').promises;
 const path = require('path');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
 const logger = require('../utils/logger');
 const db = require('../config/database');
 const encryptionKeyManager = require('../utils/encryption-key-manager');
@@ -14,14 +15,15 @@ const {
   sshKeyGenerateSchema
 } = require('../validation/schemas');
 
+const execFileAsync = promisify(execFile);
+
 /**
  * Encrypt a value using the secure encryption key
  * @param {string} value - Value to encrypt
  * @returns {string} Encrypted value
  */
 function encrypt(value) {
-  const key = encryptionKeyManager.getKey();
-  return crypto.AES.encrypt(value, key).toString();
+  return encryptionKeyManager.encrypt(value);
 }
 
 /**
@@ -30,8 +32,7 @@ function encrypt(value) {
  * @returns {string} Decrypted value
  */
 function decrypt(encryptedValue) {
-  const key = encryptionKeyManager.getKey();
-  return crypto.AES.decrypt(encryptedValue, key).toString(crypto.enc.Utf8);
+  return encryptionKeyManager.decrypt(encryptedValue);
 }
 
 /**
@@ -114,23 +115,31 @@ router.post('/', validate(createSettingSchema), async (req, res) => {
 router.post('/ssh/generate', validate(sshKeyGenerateSchema), async (req, res) => {
   const { keyType, keySize } = req.body;
   try {
+    // Validate DATA_PATH
     const dataPath = process.env.DATA_PATH || '/data';
+    if (!path.isAbsolute(dataPath)) {
+      throw new Error('Invalid DATA_PATH configuration');
+    }
+
     const sshDir = path.join(dataPath, 'ssh');
 
-    // Ensure SSH directory exists
-    await fs.mkdir(sshDir, { recursive: true });
+    // Ensure SSH directory exists with proper permissions
+    await fs.mkdir(sshDir, { recursive: true, mode: 0o700 });
 
     const privateKeyPath = path.join(sshDir, 'id_rsa');
     const publicKeyPath = path.join(sshDir, 'id_rsa.pub');
 
-    // Generate SSH key using ssh-keygen
-    const { exec } = require('child_process');
-    const { promisify } = require('util');
-    const execAsync = promisify(exec);
-
-    await execAsync(
-      `ssh-keygen -t rsa -b 4096 -f ${privateKeyPath} -N "" -C "homeguardian@homeassistant"`
-    );
+    // Generate SSH key using execFile (safe from command injection)
+    await execFileAsync('ssh-keygen', [
+      '-t', 'rsa',
+      '-b', '4096',
+      '-f', privateKeyPath,
+      '-N', '',
+      '-C', 'homeguardian@homeassistant'
+    ], {
+      timeout: 30000, // 30 seconds
+      maxBuffer: 1024 * 1024 // 1MB
+    });
 
     // Read keys
     const publicKey = await fs.readFile(publicKeyPath, 'utf8');
@@ -140,11 +149,15 @@ router.post('/ssh/generate', validate(sshKeyGenerateSchema), async (req, res) =>
     const encryptedPrivateKey = encrypt(privateKey);
 
     await db.run(
-      'INSERT INTO ssh_keys (public_key, private_key_encrypted) VALUES (?, ?)',
-      [publicKey, encryptedPrivateKey]
+      'INSERT INTO ssh_keys (public_key, private_key_encrypted, created_at) VALUES (?, ?, ?)',
+      [publicKey, encryptedPrivateKey, Date.now()]
     );
 
-    logger.info('SSH key pair generated');
+    // Remove key files from disk (keep only in encrypted database)
+    await fs.unlink(privateKeyPath);
+    await fs.unlink(publicKeyPath);
+
+    logger.info('SSH key pair generated and stored securely');
 
     res.json({
       success: true,
@@ -153,9 +166,14 @@ router.post('/ssh/generate', validate(sshKeyGenerateSchema), async (req, res) =>
     });
   } catch (error) {
     logger.error('Failed to generate SSH key:', error);
+
+    const message = process.env.NODE_ENV === 'production'
+      ? 'Failed to generate SSH key'
+      : error.message;
+
     res.status(500).json({
       error: 'Failed to generate SSH key',
-      message: error.message
+      message
     });
   }
 });
