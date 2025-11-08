@@ -45,7 +45,7 @@ WORKDIR /app/backend
 LABEL \
     io.hass.name="HomeGuardian" \
     io.hass.description="Git-powered configuration manager for Home Assistant" \
-    io.hass.version="1.0.2" \
+    io.hass.version="1.2.0" \
     io.hass.type="addon" \
     io.hass.arch="aarch64|amd64|armhf|armv7"
 
