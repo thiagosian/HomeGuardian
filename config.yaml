@@ -39,6 +39,8 @@ options:
   parse_esphome: true
   parse_packages: true
   backup_lovelace: true
+  parse_blueprints: true
+  parse_voice_assistant: true
   exclude_secrets: true
   remote_enabled: false
 schema:
@@ -53,5 +55,7 @@ schema:
   parse_esphome: bool
   parse_packages: bool
   backup_lovelace: bool
+  parse_blueprints: bool
+  parse_voice_assistant: bool
   exclude_secrets: bool
   remote_enabled: bool
