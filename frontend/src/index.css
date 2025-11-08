@@ -2,54 +2,656 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================
+   HOMEGUARDIAN - CSS VARIABLES & THEMING SYSTEM
+   ============================================================================
+
+   4 Temas disponíveis:
+   - [data-theme="classic-light"] - Original HomeGuardian (Cyan/Orange)
+   - [data-theme="classic-dark"]  - Classic em Dark Mode
+   - [data-theme="new-light"]     - Novo tema moderno Light
+   - [data-theme="new-dark"]      - Novo tema moderno Dark (padrão atual)
+
+   Estrutura de variáveis HSL para fácil manipulação:
+   --variable: H S% L%;
+   uso: hsl(var(--variable))
+   ============================================================================ */
+
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+
+  /* ==========================================================================
+     CLASSIC LIGHT THEME - Original HomeGuardian
+     Inspirado no GitHub Light, com cyan e orange vibrantes
+     ========================================================================== */
+
+  [data-theme="classic-light"],
+  :root:not(.dark):not([data-theme]) {
+    /* Backgrounds */
+    --background: 0 0% 98%;                    /* #fafafa */
+    --foreground: 210 11% 15%;                 /* #24292e */
+
+    --card: 0 0% 100%;                         /* #ffffff */
+    --card-foreground: 210 11% 15%;            /* #24292e */
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 11% 15%;
+
+    /* Primary (Cyan) */
+    --primary: 199 92% 56%;                    /* #03a9f4 */
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary (Orange) */
+    --secondary: 36 100% 50%;                  /* #ff9800 */
+    --secondary-foreground: 0 0% 0%;
+
+    /* Accent */
+    --accent: 199 92% 96%;                     /* Cyan muito claro */
+    --accent-foreground: 199 92% 36%;
+
+    /* Muted */
+    --muted: 210 17% 96%;                      /* #f6f8fa */
+    --muted-foreground: 210 12% 46%;           /* #6a737d */
+
+    /* Destructive */
+    --destructive: 0 100% 50%;                 /* #ff0000 */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders & Inputs */
+    --border: 210 18% 87%;                     /* #d1d5da */
+    --input: 210 18% 87%;
+    --ring: 199 92% 56%;                       /* Same as primary */
+
+    /* Status Colors */
+    --success: 134 61% 41%;                    /* #28a745 - GitHub green */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 36 100% 50%;                    /* #ff9800 - Orange */
+    --warning-foreground: 0 0% 0%;
+
+    --error: 354 70% 54%;                      /* #dc3545 - GitHub red */
+    --error-foreground: 0 0% 100%;
+
+    --info: 199 92% 56%;                       /* #03a9f4 - Cyan */
+    --info-foreground: 0 0% 100%;
+
+    /* Diff Colors - GitHub style */
+    --diff-added: 134 60% 93%;                 /* #e6ffed */
+    --diff-added-fg: 134 61% 41%;              /* #28a745 */
+    --diff-removed: 354 100% 94%;              /* #ffeef0 */
+    --diff-removed-fg: 354 70% 54%;            /* #dc3545 */
+    --diff-modified: 45 100% 94%;              /* #fff5b1 */
+    --diff-modified-fg: 36 100% 35%;           /* #b88300 */
+    --diff-context: 210 17% 96%;               /* #f6f8fa */
+    --diff-context-fg: 210 11% 15%;            /* #24292e */
+
+    /* Design System */
+    --radius: 0.375rem;                        /* 6px - Classic mais quadrado */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  }
+
+  /* ==========================================================================
+     CLASSIC DARK THEME - Classic em Dark Mode
+     Mantém cores Classic (cyan/orange) mas em fundo escuro
+     ========================================================================== */
+
+  [data-theme="classic-dark"] {
+    /* Backgrounds */
+    --background: 220 13% 10%;                 /* #181b1f - GitHub dark */
+    --foreground: 0 0% 98%;                    /* #fafafa */
+
+    --card: 220 13% 13%;                       /* #1f2428 */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 220 13% 13%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Primary (Cyan - mais claro para dark mode) */
+    --primary: 199 92% 66%;                    /* #33b5ff */
+    --primary-foreground: 220 13% 10%;
+
+    /* Secondary (Orange - mais claro) */
+    --secondary: 36 100% 60%;                  /* #ffad33 */
+    --secondary-foreground: 220 13% 10%;
+
+    /* Accent */
+    --accent: 220 13% 18%;                     /* Cinza escuro */
+    --accent-foreground: 199 92% 66%;
+
+    /* Muted */
+    --muted: 220 13% 18%;                      /* #2f3439 */
+    --muted-foreground: 0 0% 65%;              /* #a5a5a5 */
+
+    /* Destructive */
+    --destructive: 0 70% 60%;                  /* #e55e5e */
+    --destructive-foreground: 0 0% 98%;
+
+    /* Borders & Inputs */
+    --border: 220 13% 20%;                     /* #353b44 */
+    --input: 220 13% 20%;
+    --ring: 199 92% 66%;
+
+    /* Status Colors */
+    --success: 134 50% 55%;                    /* #52c776 */
+    --success-foreground: 0 0% 0%;
+
+    --warning: 36 100% 60%;                    /* #ffad33 */
+    --warning-foreground: 0 0% 0%;
+
+    --error: 354 70% 65%;                      /* #e66b6b */
+    --error-foreground: 0 0% 0%;
+
+    --info: 199 92% 66%;                       /* #33b5ff */
+    --info-foreground: 0 0% 0%;
+
+    /* Diff Colors - Dark mode optimized */
+    --diff-added: 134 40% 20%;                 /* Verde escuro */
+    --diff-added-fg: 134 50% 65%;              /* Verde claro */
+    --diff-removed: 354 40% 20%;               /* Vermelho escuro */
+    --diff-removed-fg: 354 70% 70%;            /* Vermelho claro */
+    --diff-modified: 45 40% 20%;               /* Amarelo escuro */
+    --diff-modified-fg: 45 100% 70%;           /* Amarelo claro */
+    --diff-context: 220 13% 15%;               /* Cinza escuro */
+    --diff-context-fg: 0 0% 80%;               /* Cinza claro */
+
+    /* Design System */
+    --radius: 0.375rem;                        /* 6px - Classic mais quadrado */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+  }
+
+  /* ==========================================================================
+     NEW LIGHT THEME - Moderno e clean
+     Inspirado em Linear, Vercel, shadcn/ui
+     ========================================================================== */
+
+  [data-theme="new-light"] {
+    /* Backgrounds */
+    --background: 0 0% 100%;                   /* #ffffff */
+    --foreground: 240 10% 3.9%;                /* #09090b */
+
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
+
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 262 83% 58%;
+
+    /* Primary (Purple) */
+    --primary: 262 83% 58%;                    /* #8b5cf6 - Vibrant purple */
     --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
+
+    /* Secondary */
+    --secondary: 240 4.8% 95.9%;               /* Cinza claro */
     --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+
+    /* Accent */
     --accent: 240 4.8% 95.9%;
     --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
+
+    /* Muted */
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    /* Destructive */
+    --destructive: 0 84.2% 60.2%;              /* #f43f5e */
     --destructive-foreground: 0 0% 98%;
+
+    /* Borders & Inputs */
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 262 83% 58%;
-    --radius: 0.5rem;
+
+    /* Status Colors */
+    --success: 142 76% 36%;                    /* #16a34a - Green */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 32 95% 44%;                     /* #ea580c - Orange */
+    --warning-foreground: 0 0% 100%;
+
+    --error: 0 84.2% 60.2%;                    /* #f43f5e - Rose */
+    --error-foreground: 0 0% 100%;
+
+    --info: 221 83% 53%;                       /* #3b82f6 - Blue */
+    --info-foreground: 0 0% 100%;
+
+    /* Diff Colors */
+    --diff-added: 142 76% 95%;                 /* Verde claro */
+    --diff-added-fg: 142 76% 36%;              /* Verde */
+    --diff-removed: 0 84% 95%;                 /* Vermelho claro */
+    --diff-removed-fg: 0 84% 60%;              /* Vermelho */
+    --diff-modified: 45 93% 95%;               /* Amarelo claro */
+    --diff-modified-fg: 45 93% 47%;            /* Amarelo */
+    --diff-context: 240 5% 96%;                /* Cinza muito claro */
+    --diff-context-fg: 240 10% 3.9%;           /* Quase preto */
+
+    /* Design System */
+    --radius: 0.5rem;                          /* 8px - New mais arredondado */
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   }
 
+  /* ==========================================================================
+     NEW DARK THEME - Moderno com neon accents (PADRÃO ATUAL)
+     Inspirado em Railway, Linear Dark, Modern Dev Tools
+     ========================================================================== */
+
+  [data-theme="new-dark"],
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 7%;
+    /* Backgrounds */
+    --background: 0 0% 3.9%;                   /* #0a0a0a - Quase preto */
+    --foreground: 0 0% 98%;                    /* #fafafa */
+
+    --card: 0 0% 7%;                           /* #121212 */
     --card-foreground: 0 0% 98%;
+
     --popover: 0 0% 7%;
     --popover-foreground: 0 0% 98%;
-    --primary: 262 83% 58%;
+
+    /* Primary (Purple/Violet) */
+    --primary: 262 83% 58%;                    /* #8b5cf6 */
     --primary-foreground: 0 0% 98%;
-    --secondary: 240 3.7% 15.9%;
+
+    /* Secondary */
+    --secondary: 240 3.7% 15.9%;               /* Cinza escuro */
     --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+
+    /* Accent */
     --accent: 240 3.7% 15.9%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+
+    /* Muted */
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    /* Destructive */
+    --destructive: 0 62.8% 30.6%;              /* #991b1b */
     --destructive-foreground: 0 0% 98%;
+
+    /* Borders & Inputs */
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 262 83% 58%;
+
+    /* Status Colors - Neon accents */
+    --success: 142 76% 48%;                    /* #22c55e - Neon green */
+    --success-foreground: 0 0% 0%;
+
+    --warning: 32 95% 54%;                     /* #f97316 - Neon orange */
+    --warning-foreground: 0 0% 0%;
+
+    --error: 0 84% 60%;                        /* #f43f5e - Neon red */
+    --error-foreground: 0 0% 0%;
+
+    --info: 199 89% 48%;                       /* #06b6d4 - Neon cyan */
+    --info-foreground: 0 0% 0%;
+
+    /* Diff Colors - Neon style with transparency */
+    --diff-added: 142 50% 20%;                 /* Verde escuro */
+    --diff-added-fg: 142 76% 60%;              /* Verde neon */
+    --diff-removed: 0 50% 20%;                 /* Vermelho escuro */
+    --diff-removed-fg: 0 84% 70%;              /* Vermelho neon */
+    --diff-modified: 45 50% 20%;               /* Amarelo escuro */
+    --diff-modified-fg: 45 93% 60%;            /* Amarelo neon */
+    --diff-context: 240 4% 12%;                /* Cinza muito escuro */
+    --diff-context-fg: 240 5% 70%;             /* Cinza claro */
+
+    /* Design System */
+    --radius: 0.5rem;                          /* 8px - New mais arredondado */
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.8);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.8), 0 2px 4px -2px rgb(0 0 0 / 0.8);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.8), 0 4px 6px -4px rgb(0 0 0 / 0.8);
+
+    /* Glow effects para dark mode */
+    --glow-primary: 0 0 20px rgba(139, 92, 246, 0.3);
+    --glow-success: 0 0 20px rgba(34, 197, 94, 0.3);
+    --glow-error: 0 0 20px rgba(244, 63, 94, 0.3);
+  }
+
+  /* ==========================================================================
+     TYPOGRAPHY SYSTEM
+     Classic: System fonts, mais conservador
+     New: Inter-like, mais moderno e bold
+     ========================================================================== */
+
+  [data-theme="classic-light"],
+  [data-theme="classic-dark"] {
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+    /* Typography scale - Classic */
+    --text-xs: 0.75rem;      /* 12px */
+    --text-sm: 0.875rem;     /* 14px */
+    --text-base: 1rem;       /* 16px */
+    --text-lg: 1.125rem;     /* 18px */
+    --text-xl: 1.25rem;      /* 20px */
+    --text-2xl: 1.5rem;      /* 24px */
+    --text-3xl: 1.875rem;    /* 30px */
+    --text-4xl: 2.25rem;     /* 36px */
+
+    /* Font weights - Classic */
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+
+    /* Line heights */
+    --leading-tight: 1.25;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.75;
+  }
+
+  [data-theme="new-light"],
+  [data-theme="new-dark"] {
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+    /* Typography scale - New (maior contraste) */
+    --text-xs: 0.75rem;      /* 12px */
+    --text-sm: 0.875rem;     /* 14px */
+    --text-base: 1rem;       /* 16px */
+    --text-lg: 1.125rem;     /* 18px */
+    --text-xl: 1.375rem;     /* 22px - maior que classic */
+    --text-2xl: 1.75rem;     /* 28px - maior */
+    --text-3xl: 2.25rem;     /* 36px - maior */
+    --text-4xl: 3rem;        /* 48px - maior */
+
+    /* Font weights - New (mais bold) */
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+
+    /* Line heights */
+    --leading-tight: 1.2;     /* Mais apertado */
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.75;
+
+    /* Letter spacing */
+    --tracking-tight: -0.02em;
+    --tracking-normal: 0;
+    --tracking-wide: 0.025em;
+  }
+
+  /* ==========================================================================
+     SPACING SYSTEM
+     Classic: Espaçamento padrão
+     New: Espaçamento mais generoso
+     ========================================================================== */
+
+  [data-theme="classic-light"],
+  [data-theme="classic-dark"] {
+    --spacing-xs: 0.25rem;   /* 4px */
+    --spacing-sm: 0.5rem;    /* 8px */
+    --spacing-md: 1rem;      /* 16px */
+    --spacing-lg: 1.5rem;    /* 24px */
+    --spacing-xl: 2rem;      /* 32px */
+    --spacing-2xl: 3rem;     /* 48px */
+  }
+
+  [data-theme="new-light"],
+  [data-theme="new-dark"] {
+    --spacing-xs: 0.5rem;    /* 8px - maior */
+    --spacing-sm: 0.75rem;   /* 12px - maior */
+    --spacing-md: 1.25rem;   /* 20px - maior */
+    --spacing-lg: 2rem;      /* 32px - maior */
+    --spacing-xl: 2.5rem;    /* 40px - maior */
+    --spacing-2xl: 4rem;     /* 64px - maior */
+  }
+
+  /* ==========================================================================
+     BORDER RADIUS
+     Classic: Mais quadrado (4-6px)
+     New: Mais arredondado (8-12px)
+     ========================================================================== */
+
+  [data-theme="classic-light"],
+  [data-theme="classic-dark"] {
+    --radius-sm: 0.25rem;    /* 4px */
+    --radius-md: 0.375rem;   /* 6px */
+    --radius-lg: 0.5rem;     /* 8px */
+    --radius-xl: 0.75rem;    /* 12px */
+    --radius-full: 9999px;   /* Círculo completo */
+  }
+
+  [data-theme="new-light"],
+  [data-theme="new-dark"] {
+    --radius-sm: 0.375rem;   /* 6px */
+    --radius-md: 0.5rem;     /* 8px */
+    --radius-lg: 0.75rem;    /* 12px */
+    --radius-xl: 1rem;       /* 16px */
+    --radius-2xl: 1.5rem;    /* 24px */
+    --radius-full: 9999px;   /* Círculo completo */
+  }
+
+  /* ==========================================================================
+     TRANSITIONS & ANIMATIONS
+     ========================================================================== */
+
+  :root {
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Easing functions */
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ==========================================================================
+     BASE STYLES
+     ========================================================================== */
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Focus styles */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 }
 
-body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+/* ==============================================================================
+   UTILITY CLASSES
+   ============================================================================== */
+
+@layer utilities {
+  /* Text colors com variáveis */
+  .text-foreground {
+    color: hsl(var(--foreground));
+  }
+
+  .text-muted-foreground {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .text-primary {
+    color: hsl(var(--primary));
+  }
+
+  .text-success {
+    color: hsl(var(--success));
+  }
+
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+
+  .text-error {
+    color: hsl(var(--error));
+  }
+
+  /* Background colors */
+  .bg-background {
+    background-color: hsl(var(--background));
+  }
+
+  .bg-card {
+    background-color: hsl(var(--card));
+  }
+
+  .bg-muted {
+    background-color: hsl(var(--muted));
+  }
+
+  .bg-primary {
+    background-color: hsl(var(--primary));
+  }
+
+  /* Border radius utilities */
+  .rounded-classic {
+    border-radius: var(--radius-md);
+  }
+
+  .rounded-modern {
+    border-radius: var(--radius-lg);
+  }
+
+  /* Diff utilities */
+  .diff-added {
+    background-color: hsl(var(--diff-added));
+    color: hsl(var(--diff-added-fg));
+  }
+
+  .diff-removed {
+    background-color: hsl(var(--diff-removed));
+    color: hsl(var(--diff-removed-fg));
+  }
+
+  .diff-modified {
+    background-color: hsl(var(--diff-modified));
+    color: hsl(var(--diff-modified-fg));
+  }
+
+  .diff-context {
+    background-color: hsl(var(--diff-context));
+    color: hsl(var(--diff-context-fg));
+  }
+
+  /* Glow effects (apenas dark themes) */
+  [data-theme="new-dark"] .glow-primary,
+  .dark .glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+
+  [data-theme="new-dark"] .glow-success,
+  .dark .glow-success {
+    box-shadow: var(--glow-success);
+  }
+
+  [data-theme="new-dark"] .glow-error,
+  .dark .glow-error {
+    box-shadow: var(--glow-error);
+  }
+}
+
+/* ==============================================================================
+   CUSTOM SCROLLBAR (Dark themes only)
+   ============================================================================== */
+
+[data-theme="classic-dark"] *::-webkit-scrollbar,
+[data-theme="new-dark"] *::-webkit-scrollbar,
+.dark *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-theme="classic-dark"] *::-webkit-scrollbar-track,
+[data-theme="new-dark"] *::-webkit-scrollbar-track,
+.dark *::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+[data-theme="classic-dark"] *::-webkit-scrollbar-thumb,
+[data-theme="new-dark"] *::-webkit-scrollbar-thumb,
+.dark *::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+[data-theme="classic-dark"] *::-webkit-scrollbar-thumb:hover,
+[data-theme="new-dark"] *::-webkit-scrollbar-thumb:hover,
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* ==============================================================================
+   PRINT STYLES
+   ============================================================================== */
+
+@media print {
+  body {
+    background-color: white;
+    color: black;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* ==============================================================================
+   ANIMATIONS
+   ============================================================================== */
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }

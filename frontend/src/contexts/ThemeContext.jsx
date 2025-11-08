@@ -1,18 +1,43 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
-// Available themes (now just 'light' and 'dark' for Tailwind)
-const THEMES = {
-  classic: 'light',
-  modern: 'dark',
+const THEME_STORAGE_KEY = 'homeguardian-theme';
+
+// Available themes: classic (light/dark) and new (light/dark)
+const VALID_THEMES = ['classic-light', 'classic-dark', 'new-light', 'new-dark'];
+
+/**
+ * Convert legacy localStorage values to new theme names
+ * classic → classic-light
+ * modern → classic-dark
+ */
+const migrateOldTheme = (oldValue) => {
+  if (oldValue === 'classic') return 'classic-light';
+  if (oldValue === 'modern') return 'classic-dark';
+  return oldValue;
 };
 
-const THEME_STORAGE_KEY = 'homeguardian-theme-preference';
+/**
+ * Determine if a theme is dark
+ */
+const isDarkTheme = (theme) => theme.endsWith('-dark');
+
+/**
+ * Determine if a theme is classic
+ */
+const isClassicTheme = (theme) => theme.startsWith('classic-');
+
+/**
+ * Determine if a theme is new
+ */
+const isNewTheme = (theme) => theme.startsWith('new-');
 
 // Create context
 const ThemeContext = createContext({
-  currentTheme: 'modern',
+  theme: 'classic-light',
   setTheme: () => {},
-  availableThemes: Object.keys(THEMES),
+  isDark: false,
+  isClassicTheme: true,
+  isNewTheme: false,
 });
 
 /**
@@ -27,30 +52,48 @@ export const useTheme = () => {
 };
 
 /**
- * ThemeProvider component for Tailwind CSS dark mode
+ * ThemeProvider component - simplified without MUI
  */
 export const ThemeProvider = ({ children }) => {
-  // Initialize theme from localStorage or default to 'modern' (dark)
-  const [currentTheme, setCurrentTheme] = useState(() => {
+  // Initialize theme from localStorage or default to 'classic-light'
+  const [theme, setCurrentTheme] = useState(() => {
     try {
-      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-      return savedTheme && THEMES[savedTheme] ? savedTheme : 'modern';
+      const saved = localStorage.getItem(THEME_STORAGE_KEY);
+
+      // If nothing saved, check for old theme format
+      if (!saved) {
+        const oldTheme = localStorage.getItem('homeguardian-theme-preference');
+        if (oldTheme) {
+          const migrated = migrateOldTheme(oldTheme);
+          return VALID_THEMES.includes(migrated) ? migrated : 'classic-light';
+        }
+        return 'classic-light';
+      }
+
+      // Check if saved value is valid, otherwise migrate
+      if (VALID_THEMES.includes(saved)) {
+        return saved;
+      }
+
+      // Try to migrate old format
+      const migrated = migrateOldTheme(saved);
+      return VALID_THEMES.includes(migrated) ? migrated : 'classic-light';
     } catch (error) {
       console.error('[ThemeProvider] Error loading theme from localStorage:', error);
-      return 'modern';
+      return 'classic-light';
     }
   });
 
-  // Apply theme to document root
+  // Apply theme to document
   useEffect(() => {
-    const root = window.document.documentElement;
-    const tailwindTheme = THEMES[currentTheme]; // 'light' or 'dark'
+    const root = document.documentElement;
 
-    // Remove both classes first
-    root.classList.remove('light', 'dark');
+    // Set data-theme attribute
+    root.setAttribute('data-theme', theme);
 
-    // Add the current theme class
-    if (tailwindTheme === 'dark') {
+    // Apply dark class for Tailwind compatibility
+    root.classList.remove('dark', 'light');
+    if (isDarkTheme(theme)) {
       root.classList.add('dark');
     } else {
       root.classList.add('light');
@@ -58,31 +101,31 @@ export const ThemeProvider = ({ children }) => {
 
     // Persist to localStorage
     try {
-      localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
-      console.log('[ThemeProvider] Theme applied:', currentTheme, '→', tailwindTheme);
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch (error) {
       console.error('[ThemeProvider] Error saving theme to localStorage:', error);
     }
-  }, [currentTheme]);
+  }, [theme]);
 
-  // Function to change the theme
-  const setTheme = (themeName) => {
-    if (THEMES[themeName]) {
-      setCurrentTheme(themeName);
-      console.log('[ThemeProvider] Theme changed to:', themeName);
-    } else {
-      console.warn('[ThemeProvider] Invalid theme name:', themeName);
+  // Function to change theme
+  const setTheme = (newTheme) => {
+    if (!VALID_THEMES.includes(newTheme)) {
+      console.warn('[ThemeProvider] Invalid theme:', newTheme, 'Valid themes:', VALID_THEMES);
+      return;
     }
+    setCurrentTheme(newTheme);
   };
 
-  // Memoize the context value to avoid unnecessary re-renders
+  // Memoize context value
   const contextValue = useMemo(
     () => ({
-      currentTheme,
+      theme,
       setTheme,
-      availableThemes: Object.keys(THEMES),
+      isDark: isDarkTheme(theme),
+      isClassicTheme: isClassicTheme(theme),
+      isNewTheme: isNewTheme(theme),
     }),
-    [currentTheme]
+    [theme]
   );
 
   return (
