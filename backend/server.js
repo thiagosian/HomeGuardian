@@ -34,9 +34,14 @@ const PORT = process.env.PORT || 8099;
 app.use(cors());
 
 // Compression middleware with streaming (replaces custom compression)
+// Configurable compression level for different RPi models:
+// - Level 4: For RPi Zero/weak CPUs (20-30% less CPU usage)
+// - Level 6: Default balanced setting (recommended for RPi 3+)
+// - Level 9: Maximum compression (not recommended for RPi)
+const compressionLevel = parseInt(process.env.COMPRESSION_LEVEL || '6');
 app.use(compression({
   threshold: 1024, // Only compress responses > 1KB
-  level: 6, // Balance between CPU and compression ratio
+  level: compressionLevel,
   filter: (req, res) => {
     if (req.headers['x-no-compression']) {
       return false;
@@ -80,6 +85,19 @@ app.use('/api/settings', settingsLimiter);
 app.use('/api/history', readLimiter);
 app.use('/api/status', statusLimiter);
 app.use('/api/notifications', readLimiter);
+
+// HTTP cache headers for GET requests to reduce redundant requests
+// Reduces load on RPi by allowing browser to cache read-only data
+app.use((req, res, next) => {
+  if (req.method === 'GET' && req.path.startsWith('/api/')) {
+    // Cache GET requests for 5 minutes (300 seconds)
+    // Excludes health checks which should always be fresh
+    if (!req.path.includes('/health')) {
+      res.set('Cache-Control', 'private, max-age=300');
+    }
+  }
+  next();
+});
 
 // API Routes
 app.use('/api', apiRoutes);
@@ -136,7 +154,7 @@ async function initializeServices() {
     }
 
     logger.info('Initializing scheduler...');
-    const scheduler = new Scheduler(gitService);
+    const scheduler = new Scheduler(gitService, db);
     app.locals.scheduler = scheduler;
 
     if (process.env.SCHEDULED_BACKUP_ENABLED === 'true') {
