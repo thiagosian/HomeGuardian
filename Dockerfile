@@ -1,3 +1,6 @@
+# ARG for base image - must be declared before first FROM in multi-stage builds
+ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.22
+
 # STAGE 1: Build Frontend
 FROM node:18-alpine AS frontend-builder
 WORKDIR /app/frontend
@@ -14,7 +17,6 @@ COPY backend/package*.json ./
 RUN npm ci --only=production
 
 # STAGE 3: Final Runtime Image
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.22
 FROM ${BUILD_FROM}
 
 # Set shell
@@ -57,7 +59,7 @@ WORKDIR /app/backend
 LABEL \
     io.hass.name="HomeGuardian" \
     io.hass.description="Git-powered configuration manager for Home Assistant" \
-    io.hass.version="1.3.0" \
+    io.hass.version="1.5.1" \
     io.hass.type="addon" \
     io.hass.arch="aarch64|amd64|armhf|armv7"
 
