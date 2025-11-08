@@ -1,0 +1,13 @@
+{
+  "domain": "homeguardian_ui",
+  "name": "HomeGuardian UI",
+  "version": "1.0.0",
+  "documentation": "https://github.com/thiagosian/HomeGuardian",
+  "issue_tracker": "https://github.com/thiagosian/HomeGuardian/issues",
+  "dependencies": [],
+  "codeowners": ["@thiagosian"],
+  "requirements": [],
+  "iot_class": "local_push",
+  "config_flow": false,
+  "integration_type": "system"
+}
