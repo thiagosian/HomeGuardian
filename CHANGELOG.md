@@ -1,3 +1,10 @@
+## [3.0.0](https://github.com/thiagosian/HomeGuardian/compare/v2.0.0...v3.0.0) (2025-11-08)
+
+
+### Features
+
+* adicionar filename ao hacs.json para HACS detectar como plugin ([012efb1](https://github.com/thiagosian/HomeGuardian/commit/012efb1b020bae910a2ac1537728950a3fcef5e1))
+
 ## [2.0.0](https://github.com/thiagosian/HomeGuardian/compare/v1.5.3...v2.0.0) (2025-11-08)
 
 
