@@ -9,6 +9,7 @@ from pathlib import Path
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.http import StaticPathConfig
 
 from .const import DOMAIN
 
@@ -34,14 +35,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.info("Setting up HomeGuardian UI from config entry")
 
     # Register the frontend module
-    await hass.http.async_register_static_paths(
-        [
-            {
-                "url_path": f"/hacsfiles/{DOMAIN}",
-                "path": str(Path(__file__).parent / "www" / "dist"),
-            }
-        ]
-    )
+    await hass.http.async_register_static_paths([
+        StaticPathConfig(
+            url_path=f"/hacsfiles/{DOMAIN}",
+            path=str(Path(__file__).parent / "www" / "dist"),
+            cache_headers=False
+        )
+    ])
 
     # Add the JavaScript module
     add_extra_js_url(hass, f"/hacsfiles/{DOMAIN}/homeguardian-ui.js")
