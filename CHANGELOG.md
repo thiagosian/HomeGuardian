@@ -5,6 +5,23 @@ All notable changes to HomeGuardian will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2025-11-08
+
+### Fixed
+- Docker build failure due to missing backend package-lock.json file
+- npm ci command now works correctly with package-lock.json present
+
+### Changed
+- Removed backend/package-lock.json from .gitignore for consistency with frontend
+
+### Miscellaneous
+- Version bump to 1.5.2 across all configuration files
+
+## [1.5.1] - 2025-11-08
+
+### Fixed
+- Dockerfile BUILD_FROM ARG declaration issue in multi-stage builds
+
 ## [1.2.0] - 2025-11-08
 
 ### Added

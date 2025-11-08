@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-backend/package-lock.json
 
 # Build outputs
 dist/
