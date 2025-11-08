@@ -1,6 +1,27 @@
 {
+  "name": "homeguardian-monorepo",
+  "version": "1.5.2",
+  "private": true,
+  "description": "HomeGuardian - Git-powered configuration manager for Home Assistant",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thiagosian/HomeGuardian.git"
+  },
+  "scripts": {
+    "release": "semantic-release"
+  },
   "dependencies": {
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-switch": "^1.2.6"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^11.1.0",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.2.6",
+    "@semantic-release/release-notes-generator": "^12.1.0",
+    "conventional-changelog-conventionalcommits": "^7.0.2",
+    "semantic-release": "^23.0.0"
   }
 }
