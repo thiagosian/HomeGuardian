@@ -1,30 +1,25 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Loader2 } from 'lucide-react'
+import { api } from '../api/client'
+import { Card, CardContent } from '../components/ui/card'
+import { Alert, AlertDescription } from '../components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import {
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Tabs,
-  Tab,
-  Typography,
-  Alert,
-} from '@mui/material'
-import { useTranslation } from 'react-i18next'
-import { api } from '../api/client'
+} from '../components/ui/table'
+import { Badge } from '../components/ui/badge'
 
 export default function Items() {
   const { t } = useTranslation()
   const [items, setItems] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [tabValue, setTabValue] = useState(0)
 
   useEffect(() => {
     fetchItems()
@@ -42,100 +37,118 @@ export default function Items() {
     }
   }
 
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue)
-  }
-
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     )
   }
 
   const renderItemTable = (itemList, type) => (
-    <TableContainer>
-      <Table>
-        <TableHead>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>{t('items.name')}</TableHead>
+          <TableHead>{t('items.file')}</TableHead>
+          {type === 'automation' && <TableHead>Status</TableHead>}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {itemList.length === 0 ? (
           <TableRow>
-            <TableCell>{t('items.name')}</TableCell>
-            <TableCell>{t('items.file')}</TableCell>
-            {type === 'automation' && <TableCell>Status</TableCell>}
+            <TableCell colSpan={3} className="text-center">
+              <p className="text-sm text-muted-foreground">
+                {t('items.noItems')}
+              </p>
+            </TableCell>
           </TableRow>
-        </TableHead>
-        <TableBody>
-          {itemList.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={3} align="center">
-                <Typography variant="body2" color="text.secondary">
-                  {t('items.noItems')}
-                </Typography>
+        ) : (
+          itemList.map((item) => (
+            <TableRow key={item.id}>
+              <TableCell className="font-medium">
+                {item.alias || item.name || item.id}
               </TableCell>
+              <TableCell>
+                <p className="text-xs text-muted-foreground font-mono">
+                  {item.file}
+                </p>
+              </TableCell>
+              {type === 'automation' && (
+                <TableCell>
+                  <Badge variant={item.enabled ? 'success' : 'secondary'}>
+                    {item.enabled ? t('items.enabled') : t('items.disabled')}
+                  </Badge>
+                </TableCell>
+              )}
             </TableRow>
-          ) : (
-            itemList.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>
-                  {item.alias || item.name || item.id}
-                </TableCell>
-                <TableCell>
-                  <Typography variant="caption">{item.file}</Typography>
-                </TableCell>
-                {type === 'automation' && (
-                  <TableCell>
-                    <Chip
-                      label={item.enabled ? t('items.enabled') : t('items.disabled')}
-                      size="small"
-                      color={item.enabled ? 'success' : 'default'}
-                    />
-                  </TableCell>
-                )}
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          ))
+        )}
+      </TableBody>
+    </Table>
   )
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        {t('items.title')}
-      </Typography>
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold tracking-tight">{t('items.title')}</h1>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       <Card>
-        <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
-          <Tab label={`${t('items.automations')} (${items?.automations?.length || 0})`} />
-          <Tab label={`${t('items.scripts')} (${items?.scripts?.length || 0})`} />
-          <Tab label={`${t('items.scenes')} (${items?.scenes?.length || 0})`} />
-          <Tab label={`${t('items.esphome')} (${items?.esphome?.length || 0})`} />
-          <Tab label={`${t('items.packages')} (${items?.packages?.length || 0})`} />
-          <Tab label={`${t('items.dashboards')} (${items?.lovelace?.length || 0})`} />
-        </Tabs>
+        <Tabs defaultValue="automations" className="w-full">
+          <div className="border-b px-6 pt-6">
+            <TabsList className="w-full justify-start">
+              <TabsTrigger value="automations">
+                {t('items.automations')} ({items?.automations?.length || 0})
+              </TabsTrigger>
+              <TabsTrigger value="scripts">
+                {t('items.scripts')} ({items?.scripts?.length || 0})
+              </TabsTrigger>
+              <TabsTrigger value="scenes">
+                {t('items.scenes')} ({items?.scenes?.length || 0})
+              </TabsTrigger>
+              <TabsTrigger value="esphome">
+                {t('items.esphome')} ({items?.esphome?.length || 0})
+              </TabsTrigger>
+              <TabsTrigger value="packages">
+                {t('items.packages')} ({items?.packages?.length || 0})
+              </TabsTrigger>
+              <TabsTrigger value="dashboards">
+                {t('items.dashboards')} ({items?.lovelace?.length || 0})
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        <CardContent>
-          {tabValue === 0 && renderItemTable(items?.automations || [], 'automation')}
-          {tabValue === 1 && renderItemTable(items?.scripts || [], 'script')}
-          {tabValue === 2 && renderItemTable(items?.scenes || [], 'scene')}
-          {tabValue === 3 && renderItemTable(items?.esphome || [], 'esphome')}
-          {tabValue === 4 && renderItemTable(items?.packages || [], 'package')}
-          {tabValue === 5 && renderItemTable(items?.lovelace || [], 'lovelace')}
-        </CardContent>
+          <CardContent className="p-6">
+            <TabsContent value="automations">
+              {renderItemTable(items?.automations || [], 'automation')}
+            </TabsContent>
+            <TabsContent value="scripts">
+              {renderItemTable(items?.scripts || [], 'script')}
+            </TabsContent>
+            <TabsContent value="scenes">
+              {renderItemTable(items?.scenes || [], 'scene')}
+            </TabsContent>
+            <TabsContent value="esphome">
+              {renderItemTable(items?.esphome || [], 'esphome')}
+            </TabsContent>
+            <TabsContent value="packages">
+              {renderItemTable(items?.packages || [], 'package')}
+            </TabsContent>
+            <TabsContent value="dashboards">
+              {renderItemTable(items?.lovelace || [], 'lovelace')}
+            </TabsContent>
+          </CardContent>
+        </Tabs>
       </Card>
 
-      <Box mt={2}>
-        <Typography variant="caption" color="text.secondary">
-          Total items: {items?.total || 0}
-        </Typography>
-      </Box>
-    </Box>
+      <p className="text-xs text-muted-foreground">
+        Total items: {items?.total || 0}
+      </p>
+    </div>
   )
 }

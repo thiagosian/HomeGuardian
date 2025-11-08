@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "source_commit": "ac2d11e^",
+    "extracted_from": [
+      "frontend/src/themes/classic.js",
+      "frontend/src/themes/modern.js"
+    ],
+    "conversion_method": "Hex to HSL (H S L format for Tailwind CSS)",
+    "notes": "Colors converted precisely for Tailwind integration. Format: 'H S% L%' (no units)"
+  },
+  "classic": {
+    "mode": "light",
+    "primary": {
+      "main": "199 98% 48%"
+    },
+    "secondary": {
+      "main": "36 100% 50%"
+    },
+    "background": {
+      "default": "0 0% 98%",
+      "paper": "0 0% 100%"
+    },
+    "text": {
+      "primary": "210 12% 16%",
+      "secondary": "212 8% 45%"
+    },
+    "status": {
+      "error": null,
+      "warning": null,
+      "success": null,
+      "info": null
+    },
+    "diff": {
+      "addedBg": "137 100% 95%",
+      "addedText": "210 12% 16%",
+      "removedBg": "353 100% 97%",
+      "removedText": "210 12% 16%",
+      "headerBg": "210 100% 97%",
+      "headerText": "212 8% 45%",
+      "viewerBg": "210 29% 97%"
+    }
+  },
+  "modern": {
+    "mode": "dark",
+    "primary": {
+      "main": "186 100% 50%",
+      "light": "199 100% 63%",
+      "dark": "188 100% 42%"
+    },
+    "secondary": {
+      "main": "165 82% 51%",
+      "light": "160 100% 47%",
+      "dark": "172 100% 37%"
+    },
+    "background": {
+      "default": "223 17% 8%",
+      "paper": "240 5% 17%"
+    },
+    "text": {
+      "primary": "0 0% 98%",
+      "secondary": "0 0% 69%",
+      "disabled": "0 0% 42%"
+    },
+    "status": {
+      "error": {
+        "main": "339 100% 48%",
+        "light": "340 100% 63%",
+        "dark": "333 84% 42%"
+      },
+      "warning": {
+        "main": "40 100% 50%",
+        "light": "47 100% 63%",
+        "dark": "34 100% 50%"
+      },
+      "success": {
+        "main": "165 82% 51%",
+        "light": "160 100% 47%",
+        "dark": "172 100% 37%"
+      },
+      "info": {
+        "main": "186 100% 50%",
+        "light": "199 100% 63%",
+        "dark": "188 100% 42%"
+      }
+    },
+    "diff": {
+      "addedBg": "rgba(29, 233, 182, 0.15)",
+      "addedText": "160 100% 47%",
+      "removedBg": "rgba(245, 0, 87, 0.15)",
+      "removedText": "340 100% 63%",
+      "headerBg": "rgba(0, 229, 255, 0.1)",
+      "headerText": "199 100% 63%",
+      "viewerBg": "0 0% 10%"
+    }
+  }
+}

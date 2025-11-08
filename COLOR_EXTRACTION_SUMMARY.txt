@@ -1,0 +1,178 @@
+================================================================================
+  MUI THEMES - COLOR EXTRACTION SUMMARY (Commit: ac2d11e^)
+================================================================================
+
+EXTRACTION COMPLETED SUCCESSFULLY
+Source files:
+  - frontend/src/themes/classic.js
+  - frontend/src/themes/modern.js
+
+Output Files Created:
+  1. MUI_THEMES_COLOR_EXTRACTION.json      - Structured JSON with HSL values
+  2. COLOR_CONVERSION_REFERENCE.md         - Complete guide with usage examples
+  3. COLORS_VISUAL_REFERENCE.html          - Visual color swatches (open in browser)
+  4. COLOR_EXTRACTION_SUMMARY.txt          - This summary file
+
+================================================================================
+CLASSIC THEME (Light Mode)
+================================================================================
+
+PRIMARY:
+  Color:    Cyan/Light Blue
+  Hex:      #03a9f4
+  HSL:      199 98% 48%
+
+SECONDARY:
+  Color:    Orange
+  Hex:      #ff9800
+  HSL:      36 100% 50%
+
+BACKGROUND:
+  Default:  #fafafa (0 0% 98%)
+  Paper:    #ffffff (0 0% 100%)
+
+TEXT:
+  Primary:  #24292e (210 12% 16%)
+  Secondary: #6a737d (212 8% 45%)
+
+DIFF COLORS:
+  Added BG:     #e6ffed (137 100% 95%)
+  Removed BG:   #ffeef0 (353 100% 97%)
+  Header BG:    #f1f8ff (210 100% 97%)
+  Viewer BG:    #f6f8fa (210 29% 97%)
+
+STATUS: Not defined in classic theme
+
+================================================================================
+MODERN THEME (Dark Mode)
+================================================================================
+
+PRIMARY (3 variants):
+  Main:     #00e5ff (186 100% 50%)  - Electric cyan
+  Light:    #40c4ff (199 100% 63%) - Light cyan
+  Dark:     #00b8d4 (188 100% 42%) - Dark cyan
+
+SECONDARY (3 variants):
+  Main:     #1de9b6 (165 82% 51%)  - Electric teal
+  Light:    #00f2a1 (160 100% 47%) - Bright green
+  Dark:     #00bfa5 (172 100% 37%) - Dark teal
+
+BACKGROUND:
+  Default:  #111318 (223 17% 8%)   - Obsidian/Charcoal
+  Paper:    #2a2a2e (240 5% 17%)   - Dark elevated surface
+
+TEXT:
+  Primary:  #fafafa (0 0% 98%)     - Almost white
+  Secondary: #b0b0b0 (0 0% 69%)    - Light gray
+  Disabled: #6a6a6a (0 0% 42%)     - Medium gray
+
+STATUS COLORS:
+
+  ERROR (3 variants):
+    Main:   #f50057 (339 100% 48%) - Vibrant magenta
+    Light:  #ff4081 (340 100% 63%) - Light magenta
+    Dark:   #c51162 (333 84% 42%)  - Dark magenta
+
+  WARNING (3 variants):
+    Main:   #ffab00 (40 100% 50%)  - Vibrant amber
+    Light:  #ffd740 (47 100% 63%)  - Light yellow
+    Dark:   #ff8f00 (34 100% 50%)  - Dark orange
+
+  SUCCESS (3 variants):
+    Main:   #1de9b6 (165 82% 51%)  - Electric teal
+    Light:  #00f2a1 (160 100% 47%) - Bright green
+    Dark:   #00bfa5 (172 100% 37%) - Dark teal
+
+  INFO (3 variants):
+    Main:   #00e5ff (186 100% 50%) - Electric cyan
+    Light:  #40c4ff (199 100% 63%) - Light cyan
+    Dark:   #00b8d4 (188 100% 42%) - Dark cyan
+
+DIFF COLORS (with transparency):
+  Added BG:     rgba(29, 233, 182, 0.15)  - Green 15% alpha
+  Added Text:   #00f2a1 (160 100% 47%)
+  Removed BG:   rgba(245, 0, 87, 0.15)    - Red 15% alpha
+  Removed Text: #ff4081 (340 100% 63%)
+  Header BG:    rgba(0, 229, 255, 0.1)    - Cyan 10% alpha
+  Header Text:  #40c4ff (199 100% 63%)
+  Viewer BG:    #1a1a1a (0 0% 10%)
+
+================================================================================
+TAILWIND CSS INTEGRATION
+================================================================================
+
+Format: H S% L% (no units)
+
+Example CSS Variables:
+  --color-primary: hsl(199 98% 48%);
+  --color-secondary: hsl(36 100% 50%);
+  --color-cyan-electric: hsl(186 100% 50%);
+  --color-error: hsl(339 100% 48%);
+
+Example Tailwind Config:
+  theme: {
+    colors: {
+      primary: 'hsl(199 98% 48%)',
+      secondary: 'hsl(36 100% 50%)',
+      error: 'hsl(339 100% 48%)',
+      ...
+    }
+  }
+
+================================================================================
+COLOR CONVERSION METHOD
+================================================================================
+
+All colors converted using HSL color model:
+  H (Hue):        0-360 degrees
+  S (Saturation): 0-100%
+  L (Lightness):  0-100%
+
+Conversion Formula Used:
+  1. Convert HEX → RGB (0-1 range)
+  2. Calculate max/min RGB values
+  3. Compute L = (max + min) / 2
+  4. Compute S based on lightness
+  5. Compute H based on dominant channel
+  6. Format as "H S% L%" (no units)
+
+Precision: All conversions rounded to nearest whole number
+
+================================================================================
+KEY OBSERVATIONS
+================================================================================
+
+CLASSIC THEME:
+  - Simple, minimal palette suitable for light backgrounds
+  - High contrast text for readability
+  - Soft, subtle diff colors using light tints
+  - No explicit status colors (fallback needed)
+  - Primary is 98% saturated (nearly pure hue)
+
+MODERN THEME:
+  - Vibrant, neon-style palette for dark background
+  - Rich, full status color set (error, warning, success, info)
+  - 100% saturation on primary and secondary for maximum impact
+  - Transparent diff backgrounds for subtle integration
+  - Info and Success mirror Primary and Secondary colors
+
+COLOR CONSISTENCY:
+  - Info color = Primary color (both cyan)
+  - Success color = Secondary color (both teal/green)
+  - Error is consistently magenta across themes
+  - Warning is consistently amber across themes
+
+SATURATION LEVELS:
+  Classic:  Mix of high saturation (100%) and medium (8-12%)
+  Modern:   Mostly 100% for vibrant effect, some at 82-84%
+
+================================================================================
+FILES REFERENCE
+================================================================================
+
+JSON Structure:     /home/user/HomeGuardian/MUI_THEMES_COLOR_EXTRACTION.json
+Markdown Guide:     /home/user/HomeGuardian/COLOR_CONVERSION_REFERENCE.md
+Visual Reference:   /home/user/HomeGuardian/COLORS_VISUAL_REFERENCE.html
+This Summary:       /home/user/HomeGuardian/COLOR_EXTRACTION_SUMMARY.txt
+
+================================================================================

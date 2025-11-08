@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUI Themes Color Reference</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+
+        h1, h2, h3 {
+            margin: 2rem 0 1rem 0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .theme-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .color-swatch {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .color-box {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            font-size: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .color-info {
+            padding: 1rem;
+            background: #fafafa;
+            font-size: 13px;
+        }
+
+        .color-info div {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .value {
+            color: #333;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .comparison-table thead {
+            background: #f0f0f0;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        .comparison-table th {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .comparison-table td:first-child {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .hsl-value {
+            font-family: 'Monaco', 'Courier New', monospace;
+            background: #f5f5f5;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .hex-value {
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: #666;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .mode-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .light-mode {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .dark-mode {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .metadata {
+            background: #e8f4f8;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #0288d1;
+        }
+
+        .metadata p {
+            margin: 0.5rem 0;
+            font-size: 14px;
+            color: #333;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MUI Themes - Color Extraction Reference</h1>
+
+        <div class="metadata">
+            <p><strong>Source:</strong> MUI Theme files (classic.js, modern.js) from commit ac2d11e^</p>
+            <p><strong>Format:</strong> HSL values optimized for Tailwind CSS - Format: <code>H S% L%</code></p>
+            <p><strong>Generated:</strong> 2025-11-08</p>
+        </div>
+
+        <!-- CLASSIC THEME -->
+        <div class="theme-section">
+            <div class="section-title">
+                <h2>Classic Theme</h2>
+                <span class="mode-badge light-mode">Light Mode</span>
+            </div>
+
+            <h3>Primary & Secondary</h3>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(199 98% 48%);">Primary</div>
+                    <div class="color-info">
+                        <div><span class="label">Name:</span> <span class="value">Cyan</span></div>
+                        <div><span class="label">HEX:</span> <span class="hex-value">#03a9f4</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">199 98% 48%</span></div>
+                    </div>
+                </div>
+
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(36 100% 50%);">Secondary</div>
+                    <div class="color-info">
+                        <div><span class="label">Name:</span> <span class="value">Orange</span></div>
+                        <div><span class="label">HEX:</span> <span class="hex-value">#ff9800</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">36 100% 50%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Background & Text</h3>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(0 0% 98%); color: #333; text-shadow: none;">Default BG</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#fafafa</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">0 0% 98%</span></div>
+                    </div>
+                </div>
+
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(0 0% 100%); color: #333; text-shadow: none;">Paper</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#ffffff</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">0 0% 100%</span></div>
+                    </div>
+                </div>
+
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(210 12% 16%);">Text Primary</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#24292e</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">210 12% 16%</span></div>
+                    </div>
+                </div>
+
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(212 8% 45%);">Text Secondary</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#6a737d</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">212 8% 45%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Diff Colors</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Element</th>
+                        <th>HEX</th>
+                        <th>HSL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Added Background</td>
+                        <td><span class="hex-value">#e6ffed</span></td>
+                        <td><span class="hsl-value">137 100% 95%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Removed Background</td>
+                        <td><span class="hex-value">#ffeef0</span></td>
+                        <td><span class="hsl-value">353 100% 97%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Header Background</td>
+                        <td><span class="hex-value">#f1f8ff</span></td>
+                        <td><span class="hsl-value">210 100% 97%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Viewer Background</td>
+                        <td><span class="hex-value">#f6f8fa</span></td>
+                        <td><span class="hsl-value">210 29% 97%</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- MODERN THEME -->
+        <div class="theme-section">
+            <div class="section-title">
+                <h2>Modern Theme</h2>
+                <span class="mode-badge dark-mode">Dark Mode</span>
+            </div>
+
+            <h3>Primary Colors (3 Variants)</h3>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(186 100% 50%);">Main</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#00e5ff</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">186 100% 50%</span></div>
+                    </div>
+                </div>
+
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(199 100% 63%);">Light</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#40c4ff</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">199 100% 63%</span></div>
+                    </div>
+                </div>
+
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(188 100% 42%);">Dark</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#00b8d4</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">188 100% 42%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Secondary Colors (3 Variants)</h3>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(165 82% 51%);">Main</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#1de9b6</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">165 82% 51%</span></div>
+                    </div>
+                </div>
+
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(160 100% 47%);">Light</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#00f2a1</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">160 100% 47%</span></div>
+                    </div>
+                </div>
+
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(172 100% 37%);">Dark</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#00bfa5</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">172 100% 37%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Background & Text</h3>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(223 17% 8%);">Default BG</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#111318</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">223 17% 8%</span></div>
+                    </div>
+                </div>
+
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(240 5% 17%);">Paper</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#2a2a2e</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">240 5% 17%</span></div>
+                    </div>
+                </div>
+
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(0 0% 98%);">Text Primary</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#fafafa</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">0 0% 98%</span></div>
+                    </div>
+                </div>
+
+                <div class="color-swatch">
+                    <div class="color-box" style="background-color: hsl(0 0% 69%);">Text Secondary</div>
+                    <div class="color-info">
+                        <div><span class="label">HEX:</span> <span class="hex-value">#b0b0b0</span></div>
+                        <div><span class="label">HSL:</span> <span class="hsl-value">0 0% 69%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Status Colors</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Status Type</th>
+                        <th>Variant</th>
+                        <th>HEX</th>
+                        <th>HSL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="3"><strong>Error</strong></td>
+                        <td>Main</td>
+                        <td><span class="hex-value">#f50057</span></td>
+                        <td><span class="hsl-value">339 100% 48%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Light</td>
+                        <td><span class="hex-value">#ff4081</span></td>
+                        <td><span class="hsl-value">340 100% 63%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Dark</td>
+                        <td><span class="hex-value">#c51162</span></td>
+                        <td><span class="hsl-value">333 84% 42%</span></td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3"><strong>Warning</strong></td>
+                        <td>Main</td>
+                        <td><span class="hex-value">#ffab00</span></td>
+                        <td><span class="hsl-value">40 100% 50%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Light</td>
+                        <td><span class="hex-value">#ffd740</span></td>
+                        <td><span class="hsl-value">47 100% 63%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Dark</td>
+                        <td><span class="hex-value">#ff8f00</span></td>
+                        <td><span class="hsl-value">34 100% 50%</span></td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3"><strong>Success</strong></td>
+                        <td>Main</td>
+                        <td><span class="hex-value">#1de9b6</span></td>
+                        <td><span class="hsl-value">165 82% 51%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Light</td>
+                        <td><span class="hex-value">#00f2a1</span></td>
+                        <td><span class="hsl-value">160 100% 47%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Dark</td>
+                        <td><span class="hex-value">#00bfa5</span></td>
+                        <td><span class="hsl-value">172 100% 37%</span></td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3"><strong>Info</strong></td>
+                        <td>Main</td>
+                        <td><span class="hex-value">#00e5ff</span></td>
+                        <td><span class="hsl-value">186 100% 50%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Light</td>
+                        <td><span class="hex-value">#40c4ff</span></td>
+                        <td><span class="hsl-value">199 100% 63%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Dark</td>
+                        <td><span class="hex-value">#00b8d4</span></td>
+                        <td><span class="hsl-value">188 100% 42%</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Diff Colors (with Transparency)</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Element</th>
+                        <th>Color Value</th>
+                        <th>HSL / Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Added Background</td>
+                        <td>rgba(29, 233, 182, 0.15)</td>
+                        <td>Green with 15% opacity</td>
+                    </tr>
+                    <tr>
+                        <td>Added Text</td>
+                        <td><span class="hex-value">#00f2a1</span></td>
+                        <td><span class="hsl-value">160 100% 47%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Removed Background</td>
+                        <td>rgba(245, 0, 87, 0.15)</td>
+                        <td>Red with 15% opacity</td>
+                    </tr>
+                    <tr>
+                        <td>Removed Text</td>
+                        <td><span class="hex-value">#ff4081</span></td>
+                        <td><span class="hsl-value">340 100% 63%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Header Background</td>
+                        <td>rgba(0, 229, 255, 0.1)</td>
+                        <td>Cyan with 10% opacity</td>
+                    </tr>
+                    <tr>
+                        <td>Header Text</td>
+                        <td><span class="hex-value">#40c4ff</span></td>
+                        <td><span class="hsl-value">199 100% 63%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Viewer Background</td>
+                        <td><span class="hex-value">#1a1a1a</span></td>
+                        <td><span class="hsl-value">0 0% 10%</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- KEY INSIGHTS -->
+        <div class="theme-section">
+            <h2>Key Insights</h2>
+            <ul style="margin: 1rem; line-height: 1.8;">
+                <li><strong>Classic Theme:</strong> Minimal color palette with primary cyan and secondary orange. No explicit status colors defined.</li>
+                <li><strong>Modern Theme:</strong> Rich, vibrant color palette optimized for dark background with full status color support.</li>
+                <li><strong>Saturation:</strong> Classic theme uses lower saturation for light backgrounds; Modern theme uses 100% saturation for neon effect.</li>
+                <li><strong>Color Mirroring:</strong> Info mirrors Primary (cyan), Success mirrors Secondary (teal/green).</li>
+                <li><strong>Transparency:</strong> Modern theme diff colors use rgba with transparency for subtle backgrounds.</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
