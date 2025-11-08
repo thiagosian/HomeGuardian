@@ -1,6 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const logger = require('../utils/logger');
+const MigrationRunner = require('../migrations/migration-runner');
 
 const DB_PATH = path.join(process.env.DATA_PATH || '/data', 'homeguardian.db');
 
@@ -115,11 +116,23 @@ const database = {
             }
 
             logger.info('Database tables and indexes initialized successfully');
-            resolve();
+
+            // Run pending migrations
+            this.runMigrations().then(() => {
+              resolve();
+            }).catch((err) => {
+              logger.error('Failed to run migrations:', err);
+              reject(err);
+            });
           });
         });
       });
     });
+  },
+
+  async runMigrations() {
+    const migrationRunner = new MigrationRunner(this);
+    await migrationRunner.runPending();
   },
 
   getDb() {

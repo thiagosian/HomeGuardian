@@ -2,114 +2,100 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../utils/logger');
 const db = require('../config/database');
+const { authenticate } = require('../middleware/auth');
+const { asyncHandler } = require('../middleware/error-handler');
 
 /**
  * Get overall system status
  */
-router.get('/', async (req, res) => {
-  try {
-    const gitService = req.app.locals.gitService;
-    const fileWatcher = req.app.locals.fileWatcher;
-    const scheduler = req.app.locals.scheduler;
+router.get('/', authenticate, asyncHandler(async (req, res) => {
+  const gitService = req.app.locals.gitService;
+  const fileWatcher = req.app.locals.fileWatcher;
+  const scheduler = req.app.locals.scheduler;
 
-    // Get git status
-    const gitStatus = await gitService.getStatus();
+  // Get git status
+  const gitStatus = await gitService.getStatus();
 
-    // Get file watcher status
-    const watcherStatus = fileWatcher.getStatus();
+  // Get file watcher status
+  const watcherStatus = fileWatcher.getStatus();
 
-    // Get scheduler status
-    const schedulerStatus = scheduler.getStatus();
+  // Get scheduler status
+  const schedulerStatus = scheduler.getStatus();
 
-    // Get last commit
-    const history = await gitService.getHistory(1, 0);
-    const lastCommit = history[0] || null;
+  // Get last commit
+  const history = await gitService.getHistory(1, 0);
+  const lastCommit = history[0] || null;
 
-    // Get remote sync status
-    const lastPushResult = await db.get(
-      'SELECT push_status, commit_date FROM backup_history WHERE push_status = "synced" ORDER BY commit_date DESC LIMIT 1'
-    );
+  // Get remote sync status
+  const lastPushResult = await db.get(
+    'SELECT push_status, commit_date FROM backup_history WHERE push_status = "synced" ORDER BY commit_date DESC LIMIT 1'
+  );
 
-    // Get pending pushes
-    const pendingPushes = await db.get(
-      'SELECT COUNT(*) as count FROM backup_history WHERE push_status = "pending"'
-    );
+  // Get pending pushes
+  const pendingPushes = await db.get(
+    'SELECT COUNT(*) as count FROM backup_history WHERE push_status = "pending"'
+  );
 
-    // Get remote URL
-    const remoteUrlResult = await db.get(
-      'SELECT value FROM settings WHERE key = "remote_url"'
-    );
+  // Get remote URL
+  const remoteUrlResult = await db.get(
+    'SELECT value FROM settings WHERE key = "remote_url"'
+  );
 
-    res.json({
-      success: true,
-      status: {
-        git: gitStatus,
-        watcher: watcherStatus,
-        scheduler: schedulerStatus,
-        lastCommit,
-        remote: {
-          configured: !!remoteUrlResult,
-          url: remoteUrlResult?.value || null,
-          lastPush: lastPushResult?.commit_date || null,
-          pendingPushes: pendingPushes?.count || 0
-        }
-      },
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    logger.error('Failed to get status:', error);
-    res.status(500).json({
-      error: 'Failed to get status',
-      message: error.message
-    });
-  }
-});
+  res.json({
+    success: true,
+    status: {
+      git: gitStatus,
+      watcher: watcherStatus,
+      scheduler: schedulerStatus,
+      lastCommit,
+      remote: {
+        configured: !!remoteUrlResult,
+        url: remoteUrlResult?.value || null,
+        lastPush: lastPushResult?.commit_date || null,
+        pendingPushes: pendingPushes?.count || 0
+      }
+    },
+    timestamp: new Date().toISOString()
+  });
+}));
 
 /**
  * Get statistics
  */
-router.get('/stats', async (req, res) => {
-  try {
-    // Get total commits count from database (optimized - no loading entire history)
-    const totalCommits = await db.get(
-      'SELECT COUNT(*) as count FROM backup_history'
-    );
+router.get('/stats', authenticate, asyncHandler(async (req, res) => {
+  // Get total commits count from database (optimized - no loading entire history)
+  const totalCommits = await db.get(
+    'SELECT COUNT(*) as count FROM backup_history'
+  );
 
-    // Get commits by type
-    const autoCommits = await db.get(
-      'SELECT COUNT(*) as count FROM backup_history WHERE is_auto = 1'
-    );
+  // Get commits by type
+  const autoCommits = await db.get(
+    'SELECT COUNT(*) as count FROM backup_history WHERE is_auto = 1'
+  );
 
-    const scheduledCommits = await db.get(
-      'SELECT COUNT(*) as count FROM backup_history WHERE is_scheduled = 1'
-    );
+  const scheduledCommits = await db.get(
+    'SELECT COUNT(*) as count FROM backup_history WHERE is_scheduled = 1'
+  );
 
-    const manualCommits = await db.get(
-      'SELECT COUNT(*) as count FROM backup_history WHERE is_auto = 0 AND is_scheduled = 0'
-    );
+  const manualCommits = await db.get(
+    'SELECT COUNT(*) as count FROM backup_history WHERE is_auto = 0 AND is_scheduled = 0'
+  );
 
-    // Get successful pushes
-    const successfulPushes = await db.get(
-      'SELECT COUNT(*) as count FROM backup_history WHERE push_status = "synced"'
-    );
+  // Get successful pushes
+  const successfulPushes = await db.get(
+    'SELECT COUNT(*) as count FROM backup_history WHERE push_status = "synced"'
+  );
 
-    res.json({
-      success: true,
-      stats: {
-        totalCommits: totalCommits?.count || 0,
-        autoCommits: autoCommits?.count || 0,
-        scheduledCommits: scheduledCommits?.count || 0,
-        manualCommits: manualCommits?.count || 0,
-        successfulPushes: successfulPushes?.count || 0
-      }
-    });
-  } catch (error) {
-    logger.error('Failed to get stats:', error);
-    res.status(500).json({
-      error: 'Failed to get stats',
-      message: error.message
-    });
-  }
-});
+  res.json({
+    success: true,
+    stats: {
+      totalCommits: totalCommits?.count || 0,
+      autoCommits: autoCommits?.count || 0,
+      scheduledCommits: scheduledCommits?.count || 0,
+      manualCommits: manualCommits?.count || 0,
+      successfulPushes: successfulPushes?.count || 0
+    }
+  });
+}));
 
 module.exports = router;
