@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homeguardian
+  labels:
+    app: homeguardian
+    version: v1.1.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homeguardian
+  template:
+    metadata:
+      labels:
+        app: homeguardian
+        version: v1.1.0
+    spec:
+      containers:
+      - name: homeguardian
+        image: homeguardian:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8099
+          name: http
+          protocol: TCP
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DATA_PATH
+          value: "/data"
+        - name: CONFIG_PATH
+          value: "/config"
+        - name: LOG_LEVEL
+          value: "info"
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: config
+          mountPath: /config
+        livenessProbe:
+          httpGet:
+            path: /api/health/live
+            port: 8099
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health/ready
+            port: 8099
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: homeguardian-data
+      - name: config
+        persistentVolumeClaim:
+          claimName: homeguardian-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homeguardian
+  labels:
+    app: homeguardian
+spec:
+  type: ClusterIP
+  selector:
+    app: homeguardian
+  ports:
+  - port: 8099
+    targetPort: 8099
+    protocol: TCP
+    name: http
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: homeguardian-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: homeguardian-config
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
