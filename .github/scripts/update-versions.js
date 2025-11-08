@@ -47,6 +47,13 @@ frontendPackage.version = version;
 fs.writeFileSync(frontendPackagePath, JSON.stringify(frontendPackage, null, 2) + '\n');
 console.log('✓ Updated frontend/package.json');
 
+// Update hacs-frontend/package.json
+const hacsFrontendPackagePath = path.join(__dirname, '../../hacs-frontend/package.json');
+const hacsFrontendPackage = JSON.parse(fs.readFileSync(hacsFrontendPackagePath, 'utf8'));
+hacsFrontendPackage.version = version;
+fs.writeFileSync(hacsFrontendPackagePath, JSON.stringify(hacsFrontendPackage, null, 2) + '\n');
+console.log('✓ Updated hacs-frontend/package.json');
+
 // Update package-lock.json files
 console.log('Updating package-lock.json files...');
 try {
