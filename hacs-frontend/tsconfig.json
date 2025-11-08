@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./custom_components/homeguardian_ui/www/dist",
+    "rootDir": "./custom_components/homeguardian_ui/www/src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false
+  },
+  "include": [
+    "custom_components/homeguardian_ui/www/src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "custom_components/homeguardian_ui/www/dist"
+  ]
+}

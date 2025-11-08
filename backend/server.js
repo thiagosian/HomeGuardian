@@ -10,7 +10,11 @@ const {
   restoreLimiter,
   settingsLimiter,
   readLimiter,
-  statusLimiter
+  statusLimiter,
+  gitHistoryLimiter,
+  itemsLimiter,
+  entityHistoryLimiter,
+  batchLimiter
 } = require('./middleware/rate-limit');
 
 // Import routes
@@ -21,6 +25,8 @@ const restoreRoutes = require('./routes/restore');
 const settingsRoutes = require('./routes/settings');
 const statusRoutes = require('./routes/status');
 const notificationRoutes = require('./routes/notifications');
+const itemsRoutes = require('./routes/items');
+const gitRoutes = require('./routes/git');
 
 // Import services
 const GitService = require('./services/git-service');
@@ -83,8 +89,12 @@ app.use('/api/backup', backupLimiter);
 app.use('/api/restore', restoreLimiter);
 app.use('/api/settings', settingsLimiter);
 app.use('/api/history', readLimiter);
+app.use('/api/history/entity', entityHistoryLimiter); // More restrictive for entity history
+app.use('/api/history/batch', batchLimiter); // Most restrictive for batch operations
 app.use('/api/status', statusLimiter);
 app.use('/api/notifications', readLimiter);
+app.use('/api/items', itemsLimiter); // Specialized limiter for items
+app.use('/api/git', gitHistoryLimiter); // Specialized limiter for Git operations
 
 // HTTP cache headers for GET requests to reduce redundant requests
 // Reduces load on RPi by allowing browser to cache read-only data
@@ -107,6 +117,8 @@ app.use('/api/restore', restoreRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/status', statusRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/items', itemsRoutes);
+app.use('/api/git', gitRoutes);
 
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
