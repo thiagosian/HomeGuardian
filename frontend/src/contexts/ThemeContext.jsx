@@ -1,20 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import classicTheme from '../themes/classic';
-import modernTheme from '../themes/modern';
 
-// Available themes
+// Available themes (now just 'light' and 'dark' for Tailwind)
 const THEMES = {
-  classic: classicTheme,
-  modern: modernTheme,
+  classic: 'light',
+  modern: 'dark',
 };
 
 const THEME_STORAGE_KEY = 'homeguardian-theme-preference';
 
 // Create context
 const ThemeContext = createContext({
-  currentTheme: 'classic',
+  currentTheme: 'modern',
   setTheme: () => {},
   availableThemes: Object.keys(THEMES),
 });
@@ -31,25 +27,39 @@ export const useTheme = () => {
 };
 
 /**
- * ThemeProvider component that wraps the app and provides theme switching functionality
+ * ThemeProvider component for Tailwind CSS dark mode
  */
 export const ThemeProvider = ({ children }) => {
-  // Initialize theme from localStorage or default to 'classic'
+  // Initialize theme from localStorage or default to 'modern' (dark)
   const [currentTheme, setCurrentTheme] = useState(() => {
     try {
       const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-      return savedTheme && THEMES[savedTheme] ? savedTheme : 'classic';
+      return savedTheme && THEMES[savedTheme] ? savedTheme : 'modern';
     } catch (error) {
       console.error('[ThemeProvider] Error loading theme from localStorage:', error);
-      return 'classic';
+      return 'modern';
     }
   });
 
-  // Persist theme preference to localStorage whenever it changes
+  // Apply theme to document root
   useEffect(() => {
+    const root = window.document.documentElement;
+    const tailwindTheme = THEMES[currentTheme]; // 'light' or 'dark'
+
+    // Remove both classes first
+    root.classList.remove('light', 'dark');
+
+    // Add the current theme class
+    if (tailwindTheme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.add('light');
+    }
+
+    // Persist to localStorage
     try {
       localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
-      console.log('[ThemeProvider] Theme saved to localStorage:', currentTheme);
+      console.log('[ThemeProvider] Theme applied:', currentTheme, '→', tailwindTheme);
     } catch (error) {
       console.error('[ThemeProvider] Error saving theme to localStorage:', error);
     }
@@ -75,15 +85,9 @@ export const ThemeProvider = ({ children }) => {
     [currentTheme]
   );
 
-  // Get the actual MUI theme object
-  const muiTheme = THEMES[currentTheme];
-
   return (
     <ThemeContext.Provider value={contextValue}>
-      <MuiThemeProvider theme={muiTheme}>
-        <CssBaseline />
-        {children}
-      </MuiThemeProvider>
+      {children}
     </ThemeContext.Provider>
   );
 };
