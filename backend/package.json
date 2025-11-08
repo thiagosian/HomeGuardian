@@ -1,6 +1,6 @@
 {
   "name": "homeguardian-backend",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "HomeGuardian backend server",
   "main": "server.js",
   "scripts": {
@@ -51,6 +51,8 @@
     "testMatch": [
       "**/__tests__/**/*.test.js"
     ],
-    "setupFilesAfterEnv": ["<rootDir>/__tests__/setup.js"]
+    "setupFilesAfterEnv": [
+      "<rootDir>/__tests__/setup.js"
+    ]
   }
 }
