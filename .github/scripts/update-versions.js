@@ -87,4 +87,21 @@ try {
   process.exit(1);
 }
 
+// Update custom_components/homeguardian_ui/manifest.json (root for HACS)
+const rootManifestPath = path.join(__dirname, '../../custom_components/homeguardian_ui/manifest.json');
+const rootManifest = JSON.parse(fs.readFileSync(rootManifestPath, 'utf8'));
+rootManifest.version = version;
+fs.writeFileSync(rootManifestPath, JSON.stringify(rootManifest, null, 2) + '\n');
+console.log('✓ Updated custom_components manifest.json');
+
+// Copy dist files to custom_components (root for HACS)
+console.log('Copying dist files to custom_components...');
+try {
+  execSync('cp -r hacs-frontend/custom_components/homeguardian_ui/www/dist/* custom_components/homeguardian_ui/www/dist/', { stdio: 'inherit' });
+  console.log('✓ Copied dist files to custom_components');
+} catch (error) {
+  console.error('✗ Error: Failed to copy dist files');
+  process.exit(1);
+}
+
 console.log(`\n✅ Successfully updated all files to version ${version}`);
