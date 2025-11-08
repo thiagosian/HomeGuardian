@@ -2,17 +2,20 @@
 
 ## O que é o HomeGuardian UI?
 
-O **HomeGuardian UI** é uma integração que adiciona **ícones de histórico de versões** diretamente nas páginas de edição do Home Assistant. Ele **NÃO** cria um novo menu ou painel - ele injeta ícones nas páginas existentes!
+O **HomeGuardian UI** é uma integração que adiciona **ícones de histórico de versões** nas listas e páginas de visualização do Home Assistant. Ele **NÃO** cria um novo menu ou painel - ele injeta ícones nas páginas existentes!
 
 ## 📍 Onde os ícones aparecem?
 
-Os ícones aparecem automaticamente quando você está editando:
+Os ícones aparecem automaticamente nas **listas** e **páginas de visualização** (não nas páginas de edição):
 
-1. **Automações** - `/config/automation/edit/[id]`
-2. **Scripts** - `/config/script/edit/[id]`
-3. **Cenas (Scenes)** - `/config/scene/edit/[id]`
-4. **Blueprints** - `/config/blueprint/edit/[id]`
-5. **Dashboards** - Nos dashboards em modo de edição
+1. **Lista de Automações** - Configurações → Automações & Cenas
+2. **Visualização de Automação** - `/config/automation/show/[id]` ou `/config/automation/info/[id]`
+3. **Lista de Scripts** - Configurações → Scripts
+4. **Visualização de Script** - `/config/script/show/[id]` ou `/config/script/info/[id]`
+5. **Lista de Cenas** - Configurações → Cenas
+6. **Lista de Dashboards** - Painéis configurados
+
+**IMPORTANTE:** Os ícones **NÃO** aparecem nas páginas de edição!
 
 ## 🧪 Como Testar
 
@@ -26,32 +29,37 @@ window.homeGuardianUI.enableDebug()
 
 Isso mostrará logs detalhados de o que a integração está fazendo.
 
-### 2. Vá para uma página de edição
+### 2. Vá para a lista de automações
 
-Navegue até qualquer automação existente:
+Navegue até a lista de automações:
 
 1. Vá em **Configurações** → **Automações & Cenas**
-2. Clique em qualquer automação para editá-la
-3. **Procure por um ícone de histórico** (mdi:history) com um número ao lado
+2. Na lista de automações, **procure por ícones de histórico** (🕐) ao lado do nome de cada automação
+3. Os ícones mostram um número indicando quantas versões existem
+4. Você também pode clicar em uma automação para **visualizá-la** (não editar) e o ícone aparecerá no cabeçalho
 
 ### 3. Verifique o console
 
 No console do navegador você deve ver:
 
 ```
- HomeGuardian UI  v1.0.0 
+ HomeGuardian UI  v1.0.0
 [HomeGuardian UI] Initializing...
 [HomeGuardian UI] Home Assistant ready, starting icon injection
-[HomeGuardian IconInjector] Checking current page: /config/automation/edit/...
+[HomeGuardian IconInjector] Checking current page: /config/automation/...
+[HomeGuardian IconInjector] Injecting automation list icons
 ```
 
 ### 4. Se não vir nenhum ícone
 
-Isso é **NORMAL** se você não tiver o **HomeGuardian Add-on** instalado! A integração UI é apenas a interface - ela precisa do add-on backend para funcionar completamente.
+**Verifique se você está no lugar certo:**
+- ❌ Páginas de **edição** não mostram ícones
+- ✅ **Listas** de automações/scripts/cenas mostram ícones
+- ✅ Páginas de **visualização** (info) mostram ícones
 
-**Sem o add-on backend:**
-- Os ícones não aparecem OU
-- Os ícones aparecem com "0 versões"
+**Sem o add-on backend instalado:**
+- Os ícones aparecem mas com "0 versões"
+- Ao clicar, mostra "No version history available"
 
 **Com o add-on backend instalado:**
 - Os ícones aparecem com o número real de versões
@@ -87,6 +95,19 @@ A integração não foi carregada. Verifique:
 
 ### Ícones não aparecem
 
-1. Certifique-se de estar em uma página de **edição** (não na lista)
-2. Tente adicionar `?debug=1` na URL
-3. Verifique se o elemento DOM está carregado
+1. Certifique-se de estar em uma **lista** ou página de **visualização** (não edição!)
+2. Ative o modo debug: `window.homeGuardianUI.enableDebug()`
+3. Verifique o console para ver quais elementos estão sendo encontrados
+4. Se aparecer "No automation rows found", significa que os seletores não estão encontrando as automações
+
+**Dica:** Os seletores procuram por:
+- `ha-data-table .mdc-data-table__row` (linhas da tabela de dados)
+- `.automation-row`, `.script-row`, `.scene-row` (linhas customizadas)
+- Elementos com atributos `data-automation-id`, `data-script-id`, etc.
+
+### Ícones aparecem mas não respondem ao clique
+
+Verifique:
+1. Se há erros no console do navegador
+2. Se o backend está instalado e rodando
+3. Se você pode acessar `/api/hassio_ingress/a0d7b954_homeguardian/status`
