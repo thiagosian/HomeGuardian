@@ -179,7 +179,8 @@ class NotificationService {
    */
   async getUnread(limit = 50) {
     return await db.all(
-      `SELECT * FROM notifications
+      `SELECT id, type, severity, title, message, read, created_at
+       FROM notifications
        WHERE read = 0
        ORDER BY created_at DESC
        LIMIT ?`,
@@ -188,10 +189,10 @@ class NotificationService {
   }
 
   /**
-   * Get all notifications with pagination
+   * Get all notifications with pagination (optimized - excludes large 'details' field)
    */
   async getAll({ limit = 50, offset = 0, severity = null, type = null }) {
-    let query = 'SELECT * FROM notifications WHERE 1=1';
+    let query = 'SELECT id, type, severity, title, message, read, created_at FROM notifications WHERE 1=1';
     const params = [];
 
     if (severity) {

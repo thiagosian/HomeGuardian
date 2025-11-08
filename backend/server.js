@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const compression = require('compression');
-const bodyParser = require('body-parser');
 const logger = require('./utils/logger');
 const db = require('./config/database');
 const encryptionKeyManager = require('./utils/encryption-key-manager');
@@ -46,13 +45,13 @@ app.use(compression({
   }
 }));
 
-// Limit request body size to prevent DoS attacks
-app.use(bodyParser.json({
+// Limit request body size to prevent DoS attacks (using Express built-in parsers)
+app.use(express.json({
   limit: '1mb',
   strict: true // Only accept arrays and objects
 }));
 
-app.use(bodyParser.urlencoded({
+app.use(express.urlencoded({
   extended: true,
   limit: '1mb'
 }));
