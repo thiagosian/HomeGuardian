@@ -71,19 +71,57 @@ export class IconInjector {
   /**
    * Check current page and inject icons if needed
    */
-  private checkCurrentPage(): void {
+  private async checkCurrentPage(): Promise<void> {
     this.log('Checking current page:', window.location.pathname);
 
-    // Wait for page to stabilize
-    setTimeout(() => {
-      this.injectAutomationIcon();
-      this.injectScriptIcon();
-      this.injectSceneIcon();
-      this.injectBlueprintIcon();
-      this.injectBlueprintListIcons();
-      this.injectVoiceAssistantIcons();
-      this.injectDashboardIcons();
-    }, 500);
+    // Wait for page stability with exponential backoff
+    await this.waitForPageStability();
+
+    // Define all injection tasks with error boundaries
+    const injectionTasks = [
+      { name: 'automation', fn: () => this.injectAutomationIcon() },
+      { name: 'script', fn: () => this.injectScriptIcon() },
+      { name: 'scene', fn: () => this.injectSceneIcon() },
+      { name: 'blueprint', fn: () => this.injectBlueprintIcon() },
+      { name: 'blueprint-list', fn: () => this.injectBlueprintListIcons() },
+      { name: 'voice-assistant', fn: () => this.injectVoiceAssistantIcons() },
+      { name: 'dashboard', fn: () => this.injectDashboardIcons() },
+    ];
+
+    // Execute all injections with error boundaries
+    for (const task of injectionTasks) {
+      try {
+        await task.fn();
+      } catch (error) {
+        // Log error but don't let one failure stop others
+        this.error(`Failed to inject ${task.name} icon:`, error);
+        // Continue to next injection
+      }
+    }
+  }
+
+  /**
+   * Wait for page to be stable using exponential backoff
+   * @param maxAttempts Maximum number of retry attempts
+   * @param baseDelay Base delay in milliseconds
+   */
+  private async waitForPageStability(
+    maxAttempts = 10,
+    baseDelay = 100
+  ): Promise<void> {
+    for (let i = 0; i < maxAttempts; i++) {
+      const delay = baseDelay * Math.pow(1.5, i); // Exponential backoff
+      await new Promise(resolve => setTimeout(resolve, delay));
+
+      // Check if key Home Assistant elements are present
+      const isReady = document.querySelector('home-assistant, ha-panel-lovelace, partial-panel-resolver');
+      if (isReady) {
+        this.log('Page ready after', delay, 'ms');
+        return;
+      }
+    }
+
+    this.error('Page stability timeout - proceeding anyway');
   }
 
   /**

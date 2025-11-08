@@ -3,6 +3,8 @@ const router = express.Router();
 const logger = require('../utils/logger');
 const cache = require('../utils/cache');
 const HAParser = require('../services/ha-parser');
+const { validate } = require('../middleware/validate');
+const { itemQuerySchema, itemParamsSchema } = require('../validation/schemas');
 
 const haParser = new HAParser();
 
@@ -12,7 +14,7 @@ const haParser = new HAParser();
  *  - type: automation|script|scene|blueprint|voice_assistant|dashboard|esphome|package
  *  - includeRaw: true/false (default: false)
  */
-router.get('/', async (req, res) => {
+router.get('/', validate(itemQuerySchema, 'query'), async (req, res) => {
   try {
     const { type, includeRaw } = req.query;
 
@@ -59,7 +61,7 @@ router.get('/', async (req, res) => {
  *  - type: Entity type
  *  - id: Entity ID
  */
-router.get('/:type/:id', async (req, res) => {
+router.get('/:type/:id', validate(itemParamsSchema, 'params'), async (req, res) => {
   try {
     const { type, id } = req.params;
     const { includeRaw } = req.query;

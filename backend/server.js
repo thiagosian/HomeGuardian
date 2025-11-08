@@ -10,7 +10,11 @@ const {
   restoreLimiter,
   settingsLimiter,
   readLimiter,
-  statusLimiter
+  statusLimiter,
+  gitHistoryLimiter,
+  itemsLimiter,
+  entityHistoryLimiter,
+  batchLimiter
 } = require('./middleware/rate-limit');
 
 // Import routes
@@ -80,10 +84,12 @@ app.use('/api/backup', backupLimiter);
 app.use('/api/restore', restoreLimiter);
 app.use('/api/settings', settingsLimiter);
 app.use('/api/history', readLimiter);
+app.use('/api/history/entity', entityHistoryLimiter); // More restrictive for entity history
+app.use('/api/history/batch', batchLimiter); // Most restrictive for batch operations
 app.use('/api/status', statusLimiter);
 app.use('/api/notifications', readLimiter);
-app.use('/api/items', readLimiter);
-app.use('/api/git', readLimiter);
+app.use('/api/items', itemsLimiter); // Specialized limiter for items
+app.use('/api/git', gitHistoryLimiter); // Specialized limiter for Git operations
 
 // API Routes
 app.use('/api', apiRoutes);

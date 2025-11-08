@@ -4,7 +4,13 @@ const logger = require('../utils/logger');
 const cache = require('../utils/cache');
 const HAParser = require('../services/ha-parser');
 const { validate } = require('../middleware/validate');
-const { historyQuerySchema, filePathQuerySchema } = require('../validation/schemas');
+const {
+  historyQuerySchema,
+  filePathQuerySchema,
+  entityHistoryParamsSchema,
+  entityHistoryQuerySchema,
+  batchVersionCountSchema
+} = require('../validation/schemas');
 
 const haParser = new HAParser();
 
@@ -200,7 +206,10 @@ router.get('/:commitHash/items', async (req, res) => {
  * Query params:
  *  - limit: Max number of commits (default: 10)
  */
-router.get('/entity/:type/:id', async (req, res) => {
+router.get('/entity/:type/:id',
+  validate(entityHistoryParamsSchema, 'params'),
+  validate(entityHistoryQuerySchema, 'query'),
+  async (req, res) => {
   try {
     const gitService = req.app.locals.gitService;
     const { type, id } = req.params;
@@ -245,6 +254,62 @@ router.get('/entity/:type/:id', async (req, res) => {
     logger.error(`Failed to get history for ${req.params.type}:${req.params.id}:`, error);
     res.status(500).json({
       error: 'Failed to get entity history',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Batch get version counts for multiple entities
+ * POST /api/history/batch/version-counts
+ * Body: { type: string, ids: string[] }
+ *
+ * This endpoint significantly improves frontend performance by allowing
+ * batch requests instead of individual API calls for each icon
+ */
+router.post('/batch/version-counts',
+  validate(batchVersionCountSchema),
+  async (req, res) => {
+  try {
+    const { type, ids } = req.body;
+
+    logger.info(`Batch version count request for ${ids.length} ${type} entities`);
+
+    // Process all IDs in parallel for performance
+    const results = await Promise.all(
+      ids.map(async (id) => {
+        try {
+          // Get the item to find its file path
+          const item = await haParser.getItem(type, id);
+
+          if (!item) {
+            return { id, count: 0, error: 'Not found' };
+          }
+
+          // Get file history (limit 1 just to check if it exists)
+          const history = await gitService.getFileHistory(item.file, 1);
+
+          return {
+            id,
+            count: history.length > 0 ? history.length : 0,
+            hasHistory: history.length > 0
+          };
+        } catch (error) {
+          logger.warn(`Failed to get version count for ${type}:${id}:`, error.message);
+          return { id, count: 0, error: error.message };
+        }
+      })
+    );
+
+    res.json({
+      success: true,
+      type,
+      results
+    });
+  } catch (error) {
+    logger.error('Batch version count failed:', error);
+    res.status(500).json({
+      error: 'Batch request failed',
       message: error.message
     });
   }

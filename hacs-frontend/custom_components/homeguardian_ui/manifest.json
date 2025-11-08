@@ -1,7 +1,7 @@
 {
   "domain": "homeguardian_ui",
   "name": "HomeGuardian UI",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "documentation": "https://github.com/thiagosian/HomeGuardian",
   "issue_tracker": "https://github.com/thiagosian/HomeGuardian/issues",
   "dependencies": [],

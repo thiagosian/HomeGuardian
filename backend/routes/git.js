@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../utils/logger');
+const { validate } = require('../middleware/validate');
+const { gitHistoryQuerySchema, gitCommitHashSchema } = require('../validation/schemas');
 
 /**
  * Get Git status
@@ -30,7 +32,7 @@ router.get('/status', async (req, res) => {
  *  - limit: Max number of commits (default: 50)
  *  - offset: Skip first N commits (default: 0)
  */
-router.get('/history', async (req, res) => {
+router.get('/history', validate(gitHistoryQuerySchema, 'query'), async (req, res) => {
   try {
     const gitService = req.app.locals.gitService;
     const { file, limit, offset } = req.query;
@@ -69,7 +71,7 @@ router.get('/history', async (req, res) => {
  * Path params:
  *  - commitHash: Commit hash
  */
-router.get('/diff/:commitHash', async (req, res) => {
+router.get('/diff/:commitHash', validate(gitCommitHashSchema, 'params'), async (req, res) => {
   try {
     const gitService = req.app.locals.gitService;
     const { commitHash } = req.params;

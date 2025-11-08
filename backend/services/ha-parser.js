@@ -217,19 +217,51 @@ class HAParser {
 
   /**
    * Parse blueprint directory recursively
+   * @param {string} dirPath - Directory path to parse
+   * @param {string} domain - Blueprint domain (automation or script)
+   * @param {boolean} includeRaw - Include raw YAML data
+   * @param {number} depth - Current recursion depth (default: 0)
    */
-  async parseBlueprintDirectory(dirPath, domain, includeRaw) {
+  async parseBlueprintDirectory(dirPath, domain, includeRaw, depth = 0) {
+    const MAX_DEPTH = 5; // Prevent excessive recursion
     const items = [];
+
+    // Security: Prevent stack overflow from malicious directory structures
+    if (depth > MAX_DEPTH) {
+      logger.warn(`Blueprint directory depth exceeded at: ${dirPath}`);
+      return items;
+    }
+
+    // Security: Ensure path is still within blueprints directory (prevent traversal)
+    const blueprintsDir = path.join(this.configPath, 'blueprints');
+    const normalizedPath = path.resolve(dirPath);
+    const normalizedBlueprintsDir = path.resolve(blueprintsDir);
+
+    if (!normalizedPath.startsWith(normalizedBlueprintsDir)) {
+      logger.warn(`Path traversal attempt detected: ${dirPath}`);
+      return items;
+    }
 
     try {
       const files = await fs.readdir(dirPath, { withFileTypes: true });
 
       for (const file of files) {
+        // Security: Skip hidden files and symlinks
+        if (file.name.startsWith('.') || file.isSymbolicLink()) {
+          logger.debug(`Skipping hidden/symlink file: ${file.name}`);
+          continue;
+        }
+
         const filePath = path.join(dirPath, file.name);
 
         if (file.isDirectory()) {
-          // Recursively parse subdirectories
-          const subItems = await this.parseBlueprintDirectory(filePath, domain, includeRaw);
+          // Recursively parse subdirectories with incremented depth
+          const subItems = await this.parseBlueprintDirectory(
+            filePath,
+            domain,
+            includeRaw,
+            depth + 1
+          );
           items.push(...subItems);
         } else if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
           try {
