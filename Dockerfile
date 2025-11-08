@@ -4,7 +4,7 @@ ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.22
 # STAGE 1: Build Frontend
 # This stage installs ALL dependencies (including devDependencies like Vite)
 # needed for building the frontend, then compiles it to static files
-FROM node:18-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 # Copy package files first for better Docker layer caching
 COPY frontend/package*.json ./
@@ -18,10 +18,12 @@ RUN npm run build
 # STAGE 2: Build Backend Dependencies
 # Backend only needs production dependencies since there's no build step
 # node_modules will be copied to the final image for runtime
-FROM node:18-alpine AS backend-builder
+FROM node:20-alpine AS backend-builder
 WORKDIR /app/backend
-# Install build tools needed for compiling native modules (sqlite3, etc.)
-RUN apk add --no-cache python3 make g++
+# Install build tools needed for compiling native modules (sqlite3, node-ssh, etc.)
+# python3-dev is required for node-gyp to compile native addons
+# py3-setuptools provides distutils which node-gyp requires
+RUN apk add --no-cache python3 python3-dev py3-setuptools make g++
 COPY backend/package*.json ./
 RUN npm ci --only=production
 
