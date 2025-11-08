@@ -70,10 +70,10 @@ router.get('/', async (req, res) => {
  */
 router.get('/stats', async (req, res) => {
   try {
-    const gitService = req.app.locals.gitService;
-
-    // Get total commits
-    const totalCommits = await gitService.getHistory(999999, 0);
+    // Get total commits count from database (optimized - no loading entire history)
+    const totalCommits = await db.get(
+      'SELECT COUNT(*) as count FROM backup_history'
+    );
 
     // Get commits by type
     const autoCommits = await db.get(
@@ -96,7 +96,7 @@ router.get('/stats', async (req, res) => {
     res.json({
       success: true,
       stats: {
-        totalCommits: totalCommits.length,
+        totalCommits: totalCommits?.count || 0,
         autoCommits: autoCommits?.count || 0,
         scheduledCommits: scheduledCommits?.count || 0,
         manualCommits: manualCommits?.count || 0,

@@ -70,15 +70,21 @@ class FileWatcher {
   }
 
   handleFileChange(eventType, filePath) {
+    const MAX_CHANGES = 1000;
+
+    // Prevent unbounded growth - force commit if too many changes
+    if (this.changedFiles.size >= MAX_CHANGES) {
+      logger.warn(`Too many pending changes (${this.changedFiles.size}), forcing commit`);
+      this.createAutoCommit();
+      return;
+    }
+
     const relativePath = path.relative(this.configPath, filePath);
 
     logger.debug(`File ${eventType}: ${relativePath}`);
 
-    this.changedFiles.add({
-      path: relativePath,
-      type: eventType,
-      timestamp: new Date()
-    });
+    // Store only the path (string) instead of full object to save memory
+    this.changedFiles.add(relativePath);
 
     // Clear existing debounce timer
     if (this.debounceTimer) {
@@ -98,7 +104,8 @@ class FileWatcher {
 
     try {
       const filesArray = Array.from(this.changedFiles);
-      const fileNames = filesArray.map(f => f.path).join(', ');
+      // filesArray now contains just paths (strings), not objects
+      const fileNames = filesArray.join(', ');
 
       logger.info(`Creating auto-commit for ${filesArray.length} changed file(s)`);
 
@@ -123,6 +130,8 @@ class FileWatcher {
       this.changedFiles.clear();
     } catch (error) {
       logger.error('Failed to create auto-commit:', error);
+      // Clear on error to prevent accumulation
+      this.changedFiles.clear();
     }
   }
 

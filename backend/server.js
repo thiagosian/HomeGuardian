@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const compression = require('compression');
 const bodyParser = require('body-parser');
 const logger = require('./utils/logger');
 const db = require('./config/database');
@@ -32,6 +33,18 @@ const PORT = process.env.PORT || 8099;
 
 // Middleware
 app.use(cors());
+
+// Compression middleware with streaming (replaces custom compression)
+app.use(compression({
+  threshold: 1024, // Only compress responses > 1KB
+  level: 6, // Balance between CPU and compression ratio
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    return compression.filter(req, res);
+  }
+}));
 
 // Limit request body size to prevent DoS attacks
 app.use(bodyParser.json({

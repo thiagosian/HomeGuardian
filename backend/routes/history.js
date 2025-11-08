@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../utils/logger');
+const cache = require('../utils/cache');
 const HAParser = require('../services/ha-parser');
 const { validate } = require('../middleware/validate');
 const { historyQuerySchema, filePathQuerySchema } = require('../validation/schemas');
@@ -118,7 +119,16 @@ router.get('/:commitHash/content', validate(filePathQuerySchema, 'query'), async
  */
 router.get('/items/all', async (req, res) => {
   try {
-    const items = await haParser.parseAllItems();
+    const cacheKey = 'ha_items_all';
+    let items = cache.get(cacheKey);
+
+    if (!items) {
+      logger.info('Parsing all HA items (cache miss)');
+      items = await haParser.parseAllItems();
+      cache.set(cacheKey, items, 300000); // 5 min TTL
+    } else {
+      logger.debug('Returning cached HA items');
+    }
 
     res.json({
       success: true,

@@ -16,7 +16,16 @@ services:
       - DATA_PATH=/data
       - CONFIG_PATH=/config
       - LOG_LEVEL=info
+      - NODE_OPTIONS=--max-old-space-size=256 --optimize-for-size
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8099/api/health/live"]
       interval: 30s
