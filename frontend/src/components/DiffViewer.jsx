@@ -1,6 +1,8 @@
-import { Box, Typography } from '@mui/material'
+import { Box, Typography, useTheme } from '@mui/material'
 
 export default function DiffViewer({ diff }) {
+  const theme = useTheme()
+
   if (!diff) {
     return (
       <Typography variant="body2" color="text.secondary">
@@ -14,13 +16,22 @@ export default function DiffViewer({ diff }) {
 
   const getLineStyle = (line) => {
     if (line.startsWith('+')) {
-      return { backgroundColor: '#e6ffed', color: '#24292e' }
+      return {
+        backgroundColor: theme.palette.diff.addedBg,
+        color: theme.palette.diff.addedText,
+      }
     } else if (line.startsWith('-')) {
-      return { backgroundColor: '#ffeef0', color: '#24292e' }
+      return {
+        backgroundColor: theme.palette.diff.removedBg,
+        color: theme.palette.diff.removedText,
+      }
     } else if (line.startsWith('@@')) {
-      return { backgroundColor: '#f1f8ff', color: '#6a737d' }
+      return {
+        backgroundColor: theme.palette.diff.headerBg,
+        color: theme.palette.diff.headerText,
+      }
     }
-    return { color: '#24292e' }
+    return { color: theme.palette.text.primary }
   }
 
   return (
@@ -28,7 +39,7 @@ export default function DiffViewer({ diff }) {
       sx={{
         fontFamily: 'monospace',
         fontSize: '0.875rem',
-        backgroundColor: '#f6f8fa',
+        backgroundColor: theme.palette.diff.viewerBg,
         borderRadius: 1,
         p: 2,
         overflowX: 'auto',
