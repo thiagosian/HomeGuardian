@@ -8,12 +8,14 @@ from pathlib import Path
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# Use the correct data key for extra modules
+DATA_EXTRA_MODULE_URL = "frontend_extra_module_url"
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -43,10 +45,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     ])
 
-    # Add the JavaScript module
-    add_extra_js_url(hass, f"/hacsfiles/{DOMAIN}/homeguardian-ui.js")
+    # Register as a frontend module using the correct method
+    if DATA_EXTRA_MODULE_URL not in hass.data:
+        hass.data[DATA_EXTRA_MODULE_URL] = set()
 
-    _LOGGER.info("HomeGuardian UI setup completed")
+    url = f"/hacsfiles/{DOMAIN}/homeguardian-ui.js"
+    hass.data[DATA_EXTRA_MODULE_URL].add(url)
+
+    _LOGGER.info("HomeGuardian UI setup completed - registered %s", url)
     return True
 
 
