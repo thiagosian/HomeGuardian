@@ -28,7 +28,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug - Check environment
+        run: |
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Current branch: $(git branch --show-current)"
+          echo "Last tag: $(git describe --tags --abbrev=0 2>/dev/null || echo 'No tags')"
+          echo "Commits since last tag: $(git log --oneline $(git describe --tags --abbrev=0 2>/dev/null || echo 'HEAD~10')..HEAD | wc -l)"
+          ls -la node_modules/@semantic-release/ || echo "No semantic-release plugins found"
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+          DEBUG: 'semantic-release:*'
+        run: npx semantic-release --debug
