@@ -14,6 +14,7 @@ COPY backend/package*.json ./
 RUN npm ci --only=production
 
 # STAGE 3: Final Runtime Image
+# ARG must be declared before FROM to be used in FROM
 ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.22
 FROM ${BUILD_FROM}
 
