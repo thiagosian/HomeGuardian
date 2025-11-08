@@ -2,6 +2,19 @@
 
 This project uses [Release Please](https://github.com/googleapis/release-please) to automate version management and releases.
 
+## Project Versioning Policy
+
+**This project follows a PATCH-FIRST versioning strategy:**
+
+- **Default**: PATCH bumps (1.5.2 → 1.5.3 → 1.5.4 → ... → 1.5.999)
+- **Explicit**: MINOR bumps only when explicitly needed (1.5.x → 1.6.0)
+- **Breaking**: MAJOR bumps only for breaking changes (1.x.x → 2.0.0)
+
+**Use PATCH-bump commit types for all normal development:**
+- `fix:`, `chore:`, `refactor:`, `docs:`, `perf:`, `build:`, `ci:`, `test:`
+
+**Use `feat:` ONLY when you explicitly want a MINOR version bump.**
+
 ## How It Works
 
 Release Please automatically:
@@ -24,15 +37,26 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
 ### Types and Version Bumps
 
-| Type | Version Bump | Description | Example |
+**⚠️ IMPORTANT: Use PATCH-bump types by default! Only use `feat:` when you explicitly want a MINOR version bump.**
+
+| Type | Version Bump | When to Use | Example |
 |------|--------------|-------------|---------|
-| `feat:` | **Minor** (1.x.0) | New feature | `feat: add backup encryption` |
-| `fix:` | **Patch** (1.0.x) | Bug fix | `fix: resolve Docker build error` |
-| `perf:` | **Patch** | Performance improvement | `perf: optimize Git operations` |
-| `docs:` | **Patch** | Documentation only | `docs: update API reference` |
-| `chore:` | **Patch** | Maintenance tasks | `chore: bump dependencies` |
-| `refactor:` | **Patch** | Code refactoring | `refactor: simplify auth logic` |
-| `BREAKING CHANGE:` | **Major** (x.0.0) | Breaking change | See below |
+| `fix:` | **Patch** (1.5.x) ✅ DEFAULT | Bug fixes | `fix: resolve Docker build error` |
+| `chore:` | **Patch** (1.5.x) ✅ DEFAULT | Maintenance, deps | `chore: update dependencies` |
+| `refactor:` | **Patch** (1.5.x) ✅ DEFAULT | Code improvements | `refactor: simplify auth logic` |
+| `perf:` | **Patch** (1.5.x) ✅ DEFAULT | Performance | `perf: optimize Git operations` |
+| `docs:` | **Patch** (1.5.x) ✅ DEFAULT | Documentation | `docs: update API reference` |
+| `build:` | **Patch** (1.5.x) ✅ DEFAULT | Build system | `build: update Docker config` |
+| `ci:` | **Patch** (1.5.x) ✅ DEFAULT | CI/CD changes | `ci: add release workflow` |
+| `test:` | **Patch** (1.5.x) ✅ DEFAULT | Tests only | `test: add unit tests` |
+| `feat:` | **Minor** (1.x.0) ⚠️ EXPLICIT | New features (use sparingly) | `feat: add backup encryption` |
+| `BREAKING CHANGE:` | **Major** (x.0.0) ⚠️ EXPLICIT | Breaking changes | See below |
+
+**✅ Recommended workflow:**
+- 99% of commits should use PATCH-bump types (`fix:`, `chore:`, `refactor:`, etc.)
+- Patch version can go up to .999 without issues (1.5.2 → 1.5.999)
+- Only use `feat:` when you consciously want to bump MINOR version
+- Only use `BREAKING CHANGE:` for actual breaking changes
 
 ### Breaking Changes
 
@@ -53,50 +77,68 @@ feat!: remove support for Node.js 16
 
 ## Examples
 
-### Feature (Minor bump: 1.5.2 → 1.6.0)
-```
-feat: add multi-repository support
+### ✅ Normal Development (Patch bump: 1.5.2 → 1.5.3)
 
-Allow users to manage multiple Home Assistant instances
-with separate Git repositories.
-```
+Most commits should be PATCH bumps:
 
-### Bug Fix (Patch bump: 1.5.2 → 1.5.3)
-```
+```bash
+# Bug fix
 fix: resolve package-lock.json missing in Docker build
 
-The Docker build was failing because npm ci requires a package-lock.json
-file. Added the missing file and updated .gitignore.
+# Add new functionality (but use chore/refactor instead of feat)
+chore: add support for multi-repository management
+
+# Improve existing code
+refactor: simplify authentication logic
+
+# Performance improvement
+perf: optimize Git diff calculation
+
+# Documentation
+docs: update installation guide
+
+# Maintenance
+chore: update dependencies to latest versions
+
+# CI/CD
+ci: add automated Docker image builds
 ```
 
-### Breaking Change (Major bump: 1.5.2 → 2.0.0)
+### ⚠️ Explicit Minor Bump (1.5.2 → 1.6.0)
+
+Use `feat:` ONLY when you explicitly want a MINOR bump:
+
+```bash
+feat: major UI redesign with new component library
+
+This is a significant milestone that warrants a minor version bump.
+Includes complete redesign of the dashboard and settings pages.
 ```
-feat!: redesign settings API
+
+### 🚨 Breaking Change (Major bump: 1.5.2 → 2.0.0)
+
+Use ONLY for actual breaking changes:
+
+```bash
+refactor!: redesign settings API
 
 BREAKING CHANGE: Settings API endpoints have been restructured.
 - /api/settings → /api/v2/configuration
 - Request/response format has changed
-```
-
-### Other Types
-```
-docs: update installation guide
-chore: update dependencies to latest versions
-perf: improve Git diff calculation speed
-refactor: extract crypto utilities to separate module
-test: add integration tests for backup service
-ci: add automated Docker image builds
+Users must update their integrations.
 ```
 
 ## Release Workflow
 
 ### 1. Develop with Conventional Commits
 
-Make changes and commit using conventional commits:
+Make changes and commit using conventional commits (prefer PATCH-bump types):
 
 ```bash
-git commit -m "feat: add scheduled backup feature"
+# ✅ RECOMMENDED: Use patch-bump types for most development
+git commit -m "chore: add scheduled backup feature"
 git commit -m "fix: resolve timezone issue in scheduler"
+git commit -m "refactor: improve error handling in Git service"
 git push origin main
 ```
 
@@ -165,24 +207,59 @@ docs(readme): add Docker Compose example
 Release Please groups all commits since the last release:
 
 ```bash
-git commit -m "feat: add backup encryption"
-git commit -m "feat: add backup compression"
+# ✅ RECOMMENDED: All patch bumps → 1.5.2 → 1.5.3
+git commit -m "chore: add backup encryption"
+git commit -m "chore: add backup compression"
 git commit -m "fix: resolve memory leak in watcher"
 git push
 ```
 
 This creates one Release PR with:
-- Version bump: 1.5.2 → 1.6.0 (two features = minor bump)
+- Version bump: 1.5.2 → 1.5.3 (all patch = patch bump)
+- CHANGELOG with all three commits listed
+
+```bash
+# ⚠️ If you include a feat: → 1.5.2 → 1.6.0
+git commit -m "feat: major new feature set"
+git commit -m "chore: add backup compression"
+git commit -m "fix: resolve memory leak"
+git push
+```
+
+This creates one Release PR with:
+- Version bump: 1.5.2 → 1.6.0 (one feat = minor bump)
 - CHANGELOG with all three commits listed
 
 ## Best Practices
 
-1. **Always use conventional commits** - This ensures proper versioning
-2. **Write clear descriptions** - These become your CHANGELOG
-3. **One logical change per commit** - Makes CHANGELOG easier to read
-4. **Review Release PRs carefully** - They represent what users will see
-5. **Don't edit CHANGELOG manually** - Let Release Please manage it
-6. **Use scopes for clarity** - `feat(backup):`, `fix(ui):`, etc.
+1. **DEFAULT TO PATCH BUMPS** - Use `fix:`, `chore:`, `refactor:` for 99% of commits
+2. **Avoid `feat:` unless necessary** - Only use when you explicitly want a MINOR bump
+3. **Always use conventional commits** - This ensures proper versioning
+4. **Write clear descriptions** - These become your CHANGELOG
+5. **One logical change per commit** - Makes CHANGELOG easier to read
+6. **Review Release PRs carefully** - They represent what users will see
+7. **Don't edit CHANGELOG manually** - Let Release Please manage it
+8. **Use scopes for clarity** - `chore(backup):`, `fix(ui):`, etc.
+
+### Quick Reference Card
+
+```
+ALWAYS USE (99% of commits):
+  fix:      - Bug fixes
+  chore:    - New features, improvements, maintenance
+  refactor: - Code improvements
+  perf:     - Performance improvements
+  docs:     - Documentation
+  build:    - Build system
+  ci:       - CI/CD
+  test:     - Tests
+
+USE SPARINGLY (when you want minor bump):
+  feat:     - Major milestone features
+
+USE RARELY (breaking changes only):
+  BREAKING CHANGE: - API changes that break compatibility
+```
 
 ## Troubleshooting
 
