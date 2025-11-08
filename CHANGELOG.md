@@ -1,3 +1,58 @@
+## [2.0.0](https://github.com/thiagosian/HomeGuardian/compare/v1.5.3...v2.0.0) (2025-11-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* Os ícones agora aparecem nas listas e páginas de visualização
+- Automações: lista de automações e página de info/visualização
+- Scripts: lista de scripts e página de info/visualização
+- Cenas: lista de cenas
+- Dashboards: lista de dashboards
+
+Removido:
+- Ícones nas páginas de edição
+
+Adicionado:
+- Ícones na lista de automações (ha-data-table)
+- Ícones na página de visualização de automação
+- Ícones na lista de scripts
+- Ícones na página de visualização de script
+- Ícones na lista de cenas
+- Ícones na lista de dashboards
+
+Os ícones aparecem ao lado do nome da entidade com um badge mostrando
+o número de versões disponíveis. Ao clicar, abre o popup de histórico.
+
+URLs suportadas agora incluem:
+- /config/automation/show/{id}
+- /config/automation/info/{id}
+- /config/script/show/{id}
+- /config/script/info/{id}
+- /config/scene/show/{id}
+
+### Features
+
+* injetar ícones nas listas e páginas de visualização ao invés de edição ([e6a364a](https://github.com/thiagosian/HomeGuardian/commit/e6a364ad73d88b9a2f97b3121c205cadb202b006))
+
+
+### Bug Fixes
+
+* add build tools to backend-builder stage for native module compilation ([6d1a77c](https://github.com/thiagosian/HomeGuardian/commit/6d1a77cba6209ff07e62b636d70722eb3f2f5942))
+* upgrade Node.js to v20 for semantic-release compatibility ([361e0ce](https://github.com/thiagosian/HomeGuardian/commit/361e0ce91008046e31a0d235b1a1e5b9ad9ed468))
+* usar DATA_EXTRA_MODULE_URL ao invés de add_extra_js_url depreciado ([07a3980](https://github.com/thiagosian/HomeGuardian/commit/07a3980815d4b217a3e4fccc0382a68b296eb426))
+
+
+### Documentation
+
+* adicionar guia de uso do HomeGuardian UI ([84d4e72](https://github.com/thiagosian/HomeGuardian/commit/84d4e728122e7478596cf1c2610b39585175961a))
+* atualizar guia para refletir que ícones aparecem em listas e visualizações ([f753680](https://github.com/thiagosian/HomeGuardian/commit/f753680e8a4f62e84a940dbefe1949dad636a349))
+
+
+### Miscellaneous
+
+* add debug logging to semantic-release workflow ([0cf986e](https://github.com/thiagosian/HomeGuardian/commit/0cf986ed9d8e345777a2d546aa4b2115f7759e41))
+* trigger semantic-release for pending changes ([325face](https://github.com/thiagosian/HomeGuardian/commit/325facefa3342b2f69d14b3c0c64d9a601f1608e))
+
 # Changelog
 
 All notable changes to HomeGuardian will be documented in this file.
