@@ -2,15 +2,22 @@
 ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.22
 
 # STAGE 1: Build Frontend
+# This stage installs ALL dependencies (including devDependencies like Vite)
+# needed for building the frontend, then compiles it to static files
 FROM node:18-alpine AS frontend-builder
 WORKDIR /app/frontend
+# Copy package files first for better Docker layer caching
 COPY frontend/package*.json ./
-RUN npm ci --only=production
+# Install all dependencies including devDependencies (Vite, Tailwind, etc.)
+# needed for the build process
+RUN npm ci
+# Copy source code and build the frontend
 COPY frontend/ ./
-RUN npm run build && \
-    npm prune --production
+RUN npm run build
 
 # STAGE 2: Build Backend Dependencies
+# Backend only needs production dependencies since there's no build step
+# node_modules will be copied to the final image for runtime
 FROM node:18-alpine AS backend-builder
 WORKDIR /app/backend
 COPY backend/package*.json ./
@@ -34,8 +41,10 @@ RUN apk add --no-cache \
 # Set working directory
 WORKDIR /app
 
-# Copy only built artifacts from build stages
+# Copy only built artifacts from build stages (no source code or dev dependencies)
+# Frontend: only the compiled static files (dist/), not node_modules or source
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+# Backend: production node_modules needed for runtime
 COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
 
 # Copy backend source
