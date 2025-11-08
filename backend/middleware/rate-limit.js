@@ -84,10 +84,80 @@ const statusLimiter = rateLimit({
   legacyHeaders: false
 });
 
+/**
+ * Git history operations - moderate (20 requests/min)
+ * Git operations are more expensive than simple reads
+ * Lower limit to prevent abuse and protect Git performance
+ */
+const gitHistoryLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  handler: rateLimitHandler,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    // Rate limit per IP + entity type for fairness
+    return `${req.ip}:${req.params.type || req.query.type || 'all'}`;
+  }
+});
+
+/**
+ * Items/Entity operations - moderate (50 requests/min)
+ * Entity lookups involve file parsing which is moderately expensive
+ */
+const itemsLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 50,
+  handler: rateLimitHandler,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Allow unlimited access to specific item lookups (less expensive)
+    // Only limit bulk/list operations
+    return req.params.id !== undefined;
+  }
+});
+
+/**
+ * Entity history operations - restrictive (15 requests/min)
+ * Combines entity parsing + git operations, very expensive
+ */
+const entityHistoryLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 15,
+  handler: rateLimitHandler,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    // Rate limit per IP + entity to prevent hammering specific entities
+    return `${req.ip}:${req.params.type}:${req.params.id}`;
+  }
+});
+
+/**
+ * Batch operations - very restrictive (10 requests/min)
+ * Batch requests can be extremely expensive
+ */
+const batchLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  handler: rateLimitHandler,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    // Stricter per-IP limit for batch operations
+    return req.ip;
+  }
+});
+
 module.exports = {
   backupLimiter,
   restoreLimiter,
   settingsLimiter,
   readLimiter,
-  statusLimiter
+  statusLimiter,
+  gitHistoryLimiter,
+  itemsLimiter,
+  entityHistoryLimiter,
+  batchLimiter
 };

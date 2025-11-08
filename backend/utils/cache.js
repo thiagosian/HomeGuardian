@@ -1,3 +1,5 @@
+const logger = require('./logger');
+
 /**
  * Simple in-memory cache implementation with LRU eviction
  * For production, replace with Redis
@@ -49,12 +51,12 @@ class Cache {
     try {
       const valueSize = Buffer.byteLength(JSON.stringify(value));
       if (valueSize > 1024 * 1024) { // Don't cache values > 1MB
-        console.warn(`[Cache] Value too large to cache: ${key}, size: ${valueSize} bytes`);
+        logger.warn(`[Cache] Value too large to cache: ${key}, size: ${valueSize} bytes`);
         return false;
       }
     } catch (err) {
       // If value can't be stringified, don't cache it
-      console.warn(`[Cache] Cannot serialize value for key: ${key}`);
+      logger.warn(`[Cache] Cannot serialize value for key: ${key}`);
       return false;
     }
 
@@ -175,7 +177,7 @@ const cache = new Cache();
 setInterval(() => {
   const cleaned = cache.cleanup();
   if (cleaned > 0) {
-    console.log(`[Cache] Cleaned up ${cleaned} expired entries`);
+    logger.info(`[Cache] Cleaned up ${cleaned} expired entries`);
   }
 }, 300000);
 

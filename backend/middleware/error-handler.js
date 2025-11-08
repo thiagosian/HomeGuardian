@@ -97,18 +97,24 @@ function errorHandler(err, req, res, next) {
     });
   }
 
-  // Prepare response
+  // Prepare standardized response format
   const response = {
-    error: message,
-    statusCode
+    success: false,
+    error: {
+      message: message,
+      code: err.name || 'ERROR',
+      statusCode
+    }
   };
 
   // Add details in development or if provided
-  if (process.env.NODE_ENV === 'development') {
-    response.stack = err.stack;
-    response.details = err.details;
+  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+    response.error.stack = err.stack;
+    if (err.details) {
+      response.error.details = err.details;
+    }
   } else if (err.details && Object.keys(err.details).length > 0) {
-    response.details = err.details;
+    response.error.details = err.details;
   }
 
   // Add request ID if available

@@ -300,4 +300,126 @@ router.post('/remote/push', async (req, res) => {
   }
 });
 
+/**
+ * Git repository maintenance (garbage collection)
+ * Optimizes git repository size and performance
+ */
+router.post('/maintenance/git-gc', async (req, res) => {
+  try {
+    const { execFile } = require('child_process');
+    const { promisify } = require('util');
+    const execFileAsync = promisify(execFile);
+
+    logger.info('Running git garbage collection...');
+    const startTime = Date.now();
+
+    // Run git gc with aggressive optimization
+    // This can take several minutes on large repositories
+    await execFileAsync('git', ['gc', '--aggressive', '--prune=now'], {
+      cwd: process.env.CONFIG_PATH || '/config',
+      timeout: 600000 // 10 minutes timeout
+    });
+
+    const duration = Date.now() - startTime;
+    logger.info(`Git garbage collection completed in ${duration}ms`);
+
+    res.json({
+      success: true,
+      message: 'Git repository optimized successfully',
+      durationMs: duration
+    });
+  } catch (error) {
+    logger.error('Git garbage collection failed:', error);
+    res.status(500).json({
+      error: 'Git garbage collection failed',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Database maintenance (cleanup old backups and vacuum)
+ */
+router.post('/maintenance/database', async (req, res) => {
+  try {
+    const db = require('../config/database');
+    const retentionDays = parseInt(req.body.retentionDays || process.env.BACKUP_RETENTION_DAYS || '365');
+
+    logger.info(`Running database maintenance (retention: ${retentionDays} days)...`);
+    const startTime = Date.now();
+
+    const result = await db.archiveOldBackups(retentionDays);
+    const duration = Date.now() - startTime;
+
+    logger.info(`Database maintenance completed in ${duration}ms`);
+
+    res.json({
+      success: true,
+      message: 'Database maintenance completed successfully',
+      deletedRecords: result.changes || 0,
+      retentionDays,
+      durationMs: duration
+    });
+  } catch (error) {
+    logger.error('Database maintenance failed:', error);
+    res.status(500).json({
+      error: 'Database maintenance failed',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Full system maintenance (git + database)
+ * Recommended to run monthly or when storage is low
+ */
+router.post('/maintenance/full', async (req, res) => {
+  try {
+    const results = {
+      git: null,
+      database: null
+    };
+
+    // Run git gc
+    try {
+      const { execFile } = require('child_process');
+      const { promisify } = require('util');
+      const execFileAsync = promisify(execFile);
+
+      logger.info('Running git garbage collection...');
+      await execFileAsync('git', ['gc', '--aggressive', '--prune=now'], {
+        cwd: process.env.CONFIG_PATH || '/config',
+        timeout: 600000
+      });
+      results.git = { success: true };
+    } catch (error) {
+      results.git = { success: false, error: error.message };
+    }
+
+    // Run database maintenance
+    try {
+      const db = require('../config/database');
+      const retentionDays = parseInt(req.body.retentionDays || process.env.BACKUP_RETENTION_DAYS || '365');
+      const result = await db.archiveOldBackups(retentionDays);
+      results.database = { success: true, deletedRecords: result.changes || 0 };
+    } catch (error) {
+      results.database = { success: false, error: error.message };
+    }
+
+    const allSuccess = results.git.success && results.database.success;
+
+    res.status(allSuccess ? 200 : 207).json({
+      success: allSuccess,
+      message: allSuccess ? 'Full maintenance completed successfully' : 'Maintenance completed with some errors',
+      results
+    });
+  } catch (error) {
+    logger.error('Full maintenance failed:', error);
+    res.status(500).json({
+      error: 'Full maintenance failed',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;

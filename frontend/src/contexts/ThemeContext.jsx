@@ -1,22 +1,47 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import classicTheme from '../themes/classic';
-import modernTheme from '../themes/modern';
 
-// Available themes
-const THEMES = {
-  classic: classicTheme,
-  modern: modernTheme,
+const THEME_STORAGE_KEY = 'homeguardian-theme';
+
+// Available themes: countess (light/dark) and mono (light/dark)
+const VALID_THEMES = ['countess-light', 'countess-dark', 'mono-light', 'mono-dark'];
+
+/**
+ * Convert legacy localStorage values to new theme names
+ * classic → countess-light
+ * modern → countess-dark
+ */
+const migrateOldTheme = (oldValue) => {
+  if (oldValue === 'classic') return 'countess-light';
+  if (oldValue === 'modern') return 'countess-dark';
+  if (oldValue === 'classic-light') return 'countess-light';
+  if (oldValue === 'classic-dark') return 'countess-dark';
+  if (oldValue === 'new-light') return 'mono-light';
+  if (oldValue === 'new-dark') return 'mono-dark';
+  return oldValue;
 };
 
-const THEME_STORAGE_KEY = 'homeguardian-theme-preference';
+/**
+ * Determine if a theme is dark
+ */
+const isDarkTheme = (theme) => theme.endsWith('-dark');
+
+/**
+ * Determine if a theme is countess
+ */
+const isCountessTheme = (theme) => theme.startsWith('countess-');
+
+/**
+ * Determine if a theme is mono
+ */
+const isMonoTheme = (theme) => theme.startsWith('mono-');
 
 // Create context
 const ThemeContext = createContext({
-  currentTheme: 'classic',
+  theme: 'countess-light',
   setTheme: () => {},
-  availableThemes: Object.keys(THEMES),
+  isDark: false,
+  isCountessTheme: true,
+  isMonoTheme: false,
 });
 
 /**
@@ -31,59 +56,85 @@ export const useTheme = () => {
 };
 
 /**
- * ThemeProvider component that wraps the app and provides theme switching functionality
+ * ThemeProvider component - simplified without MUI
  */
 export const ThemeProvider = ({ children }) => {
-  // Initialize theme from localStorage or default to 'classic'
-  const [currentTheme, setCurrentTheme] = useState(() => {
+  // Initialize theme from localStorage or default to 'countess-light'
+  const [theme, setCurrentTheme] = useState(() => {
     try {
-      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-      return savedTheme && THEMES[savedTheme] ? savedTheme : 'classic';
+      const saved = localStorage.getItem(THEME_STORAGE_KEY);
+
+      // If nothing saved, check for old theme format
+      if (!saved) {
+        const oldTheme = localStorage.getItem('homeguardian-theme-preference');
+        if (oldTheme) {
+          const migrated = migrateOldTheme(oldTheme);
+          return VALID_THEMES.includes(migrated) ? migrated : 'countess-light';
+        }
+        return 'countess-light';
+      }
+
+      // Check if saved value is valid, otherwise migrate
+      if (VALID_THEMES.includes(saved)) {
+        return saved;
+      }
+
+      // Try to migrate old format
+      const migrated = migrateOldTheme(saved);
+      return VALID_THEMES.includes(migrated) ? migrated : 'countess-light';
     } catch (error) {
       console.error('[ThemeProvider] Error loading theme from localStorage:', error);
-      return 'classic';
+      return 'countess-light';
     }
   });
 
-  // Persist theme preference to localStorage whenever it changes
+  // Apply theme to document
   useEffect(() => {
+    const root = document.documentElement;
+
+    // Set data-theme attribute
+    root.setAttribute('data-theme', theme);
+
+    // Apply dark class for Tailwind compatibility
+    root.classList.remove('dark', 'light');
+    if (isDarkTheme(theme)) {
+      root.classList.add('dark');
+    } else {
+      root.classList.add('light');
+    }
+
+    // Persist to localStorage
     try {
-      localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
-      console.log('[ThemeProvider] Theme saved to localStorage:', currentTheme);
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch (error) {
       console.error('[ThemeProvider] Error saving theme to localStorage:', error);
     }
-  }, [currentTheme]);
+  }, [theme]);
 
-  // Function to change the theme
-  const setTheme = (themeName) => {
-    if (THEMES[themeName]) {
-      setCurrentTheme(themeName);
-      console.log('[ThemeProvider] Theme changed to:', themeName);
-    } else {
-      console.warn('[ThemeProvider] Invalid theme name:', themeName);
+  // Function to change theme
+  const setTheme = (newTheme) => {
+    if (!VALID_THEMES.includes(newTheme)) {
+      console.warn('[ThemeProvider] Invalid theme:', newTheme, 'Valid themes:', VALID_THEMES);
+      return;
     }
+    setCurrentTheme(newTheme);
   };
 
-  // Memoize the context value to avoid unnecessary re-renders
+  // Memoize context value
   const contextValue = useMemo(
     () => ({
-      currentTheme,
+      theme,
       setTheme,
-      availableThemes: Object.keys(THEMES),
+      isDark: isDarkTheme(theme),
+      isCountessTheme: isCountessTheme(theme),
+      isMonoTheme: isMonoTheme(theme),
     }),
-    [currentTheme]
+    [theme]
   );
-
-  // Get the actual MUI theme object
-  const muiTheme = THEMES[currentTheme];
 
   return (
     <ThemeContext.Provider value={contextValue}>
-      <MuiThemeProvider theme={muiTheme}>
-        <CssBaseline />
-        {children}
-      </MuiThemeProvider>
+      {children}
     </ThemeContext.Provider>
   );
 };

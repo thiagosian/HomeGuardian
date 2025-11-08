@@ -1,24 +1,18 @@
 import { useState, useEffect } from 'react'
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Grid,
-  Typography,
-  Alert,
-} from '@mui/material'
-import {
-  Backup as BackupIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  CloudDone as CloudDoneIcon,
-} from '@mui/icons-material'
 import { useTranslation } from 'react-i18next'
-import { api } from '../api/client'
 import { formatDistanceToNow } from 'date-fns'
+import {
+  HardDrive,
+  CheckCircle2,
+  AlertCircle,
+  CloudCheck,
+  Loader2
+} from 'lucide-react'
+import { api } from '../api/client'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Badge } from '../components/ui/badge'
+import { Alert, AlertDescription } from '../components/ui/alert'
 
 export default function Dashboard() {
   const { t } = useTranslation()
@@ -60,168 +54,156 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     )
   }
 
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">{t('dashboard.title')}</Typography>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.title')}</h1>
         <Button
-          variant="contained"
-          startIcon={backing ? <CircularProgress size={20} /> : <BackupIcon />}
           onClick={handleBackupNow}
           disabled={backing}
+          size="lg"
         >
+          {backing ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <HardDrive className="mr-2 h-4 w-4" />
+          )}
           {t('dashboard.backupNow')}
         </Button>
-      </Box>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      <Grid container spacing={3}>
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Git Status */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                {t('dashboard.gitStatus')}
-              </Typography>
-              <Box display="flex" alignItems="center" mt={2}>
-                {status?.git?.isClean ? (
-                  <CheckCircleIcon color="success" sx={{ mr: 1 }} />
-                ) : (
-                  <ErrorIcon color="warning" sx={{ mr: 1 }} />
-                )}
-                <Typography>
-                  {status?.git?.isClean ? t('dashboard.clean') : t('dashboard.modified')}
-                </Typography>
-              </Box>
-              {!status?.git?.isClean && (
-                <Box mt={2}>
-                  <Typography variant="body2" color="text.secondary">
-                    Modified: {status?.git?.modified?.length || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Created: {status?.git?.created?.length || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Deleted: {status?.git?.deleted?.length || 0}
-                  </Typography>
-                </Box>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.gitStatus')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center mt-2">
+              {status?.git?.isClean ? (
+                <CheckCircle2 className="mr-2 h-5 w-5 text-green-500" />
+              ) : (
+                <AlertCircle className="mr-2 h-5 w-5 text-amber-500" />
               )}
-            </CardContent>
-          </Card>
-        </Grid>
+              <p className="text-sm font-medium">
+                {status?.git?.isClean ? t('dashboard.clean') : t('dashboard.modified')}
+              </p>
+            </div>
+            {!status?.git?.isClean && (
+              <div className="mt-4 space-y-1">
+                <p className="text-sm text-muted-foreground">
+                  Modified: {status?.git?.modified?.length || 0}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Created: {status?.git?.created?.length || 0}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Deleted: {status?.git?.deleted?.length || 0}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* File Watcher Status */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                {t('dashboard.fileWatcher')}
-              </Typography>
-              <Box display="flex" alignItems="center" mt={2}>
-                <Chip
-                  label={
-                    status?.watcher?.isRunning
-                      ? t('dashboard.running')
-                      : t('dashboard.stopped')
-                  }
-                  color={status?.watcher?.isRunning ? 'success' : 'default'}
-                  size="small"
-                />
-              </Box>
-              {status?.watcher?.changedFiles?.length > 0 && (
-                <Typography variant="body2" color="text.secondary" mt={2}>
-                  Changed files: {status.watcher.changedFiles.length}
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.fileWatcher')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center mt-2">
+              <Badge variant={status?.watcher?.isRunning ? 'success' : 'secondary'}>
+                {status?.watcher?.isRunning
+                  ? t('dashboard.running')
+                  : t('dashboard.stopped')}
+              </Badge>
+            </div>
+            {status?.watcher?.changedFiles?.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-4">
+                Changed files: {status.watcher.changedFiles.length}
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Last Backup */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                {t('dashboard.lastBackup')}
-              </Typography>
-              {status?.lastCommit ? (
-                <Box mt={2}>
-                  <Typography variant="body2" color="text.secondary">
-                    {status.lastCommit.message}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {formatDistanceToNow(new Date(status.lastCommit.date), {
-                      addSuffix: true,
-                    })}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    mt={1}
-                  >
-                    {status.lastCommit.shortHash}
-                  </Typography>
-                </Box>
-              ) : (
-                <Typography variant="body2" color="text.secondary" mt={2}>
-                  No backups yet
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.lastBackup')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {status?.lastCommit ? (
+              <div className="mt-2 space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  {status.lastCommit.message}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDistanceToNow(new Date(status.lastCommit.date), {
+                    addSuffix: true,
+                  })}
+                </p>
+                <p className="text-xs text-muted-foreground font-mono">
+                  {status.lastCommit.shortHash}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-2">
+                No backups yet
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Remote Sync Status */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                {t('dashboard.remoteSync')}
-              </Typography>
-              <Box display="flex" alignItems="center" mt={2}>
-                {status?.remote?.configured ? (
-                  <>
-                    <CloudDoneIcon color="success" sx={{ mr: 1 }} />
-                    <Typography>{t('dashboard.configured')}</Typography>
-                  </>
-                ) : (
-                  <>
-                    <ErrorIcon color="warning" sx={{ mr: 1 }} />
-                    <Typography>{t('dashboard.notConfigured')}</Typography>
-                  </>
-                )}
-              </Box>
-              {status?.remote?.configured && (
-                <Box mt={2}>
-                  <Typography variant="body2" color="text.secondary">
-                    Pending pushes: {status.remote.pendingPushes || 0}
-                  </Typography>
-                  {status.remote.lastPush && (
-                    <Typography variant="caption" color="text.secondary">
-                      Last push:{' '}
-                      {formatDistanceToNow(new Date(status.remote.lastPush), {
-                        addSuffix: true,
-                      })}
-                    </Typography>
-                  )}
-                </Box>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.remoteSync')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center mt-2">
+              {status?.remote?.configured ? (
+                <>
+                  <CloudCheck className="mr-2 h-5 w-5 text-green-500" />
+                  <p className="text-sm font-medium">{t('dashboard.configured')}</p>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="mr-2 h-5 w-5 text-amber-500" />
+                  <p className="text-sm font-medium">{t('dashboard.notConfigured')}</p>
+                </>
               )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+            </div>
+            {status?.remote?.configured && (
+              <div className="mt-4 space-y-1">
+                <p className="text-sm text-muted-foreground">
+                  Pending pushes: {status.remote.pendingPushes || 0}
+                </p>
+                {status.remote.lastPush && (
+                  <p className="text-xs text-muted-foreground">
+                    Last push:{' '}
+                    {formatDistanceToNow(new Date(status.remote.lastPush), {
+                      addSuffix: true,
+                    })}
+                  </p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }

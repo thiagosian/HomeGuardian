@@ -9,6 +9,8 @@ class HAParser {
     this.parseESPHome = process.env.PARSE_ESPHOME === 'true';
     this.parsePackages = process.env.PARSE_PACKAGES === 'true';
     this.backupLovelace = process.env.BACKUP_LOVELACE !== 'false'; // Default to true
+    this.parseBlueprints = process.env.PARSE_BLUEPRINTS !== 'false'; // Default to true
+    this.parseVoiceAssistant = process.env.PARSE_VOICE_ASSISTANT !== 'false'; // Default to true
   }
 
   /**
@@ -172,6 +174,209 @@ class HAParser {
       return items;
     } catch (error) {
       logger.error('Failed to parse scenes:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Parse blueprints (automation and script blueprints)
+   * @param {boolean} includeRaw - Include raw YAML object (default: true)
+   */
+  async parseBlueprints(includeRaw = true) {
+    try {
+      const items = [];
+      const blueprintsDir = path.join(this.configPath, 'blueprints');
+
+      // Parse automation blueprints
+      const automationBlueprintsDir = path.join(blueprintsDir, 'automation');
+      if (await this.fileExists(automationBlueprintsDir)) {
+        const autoBlueprints = await this.parseBlueprintDirectory(
+          automationBlueprintsDir,
+          'automation',
+          includeRaw
+        );
+        items.push(...autoBlueprints);
+      }
+
+      // Parse script blueprints
+      const scriptBlueprintsDir = path.join(blueprintsDir, 'script');
+      if (await this.fileExists(scriptBlueprintsDir)) {
+        const scriptBlueprints = await this.parseBlueprintDirectory(
+          scriptBlueprintsDir,
+          'script',
+          includeRaw
+        );
+        items.push(...scriptBlueprints);
+      }
+
+      logger.info(`Parsed ${items.length} blueprint(s)`);
+      return items;
+    } catch (error) {
+      logger.error('Failed to parse blueprints:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Parse blueprint directory recursively
+   * @param {string} dirPath - Directory path to parse
+   * @param {string} domain - Blueprint domain (automation or script)
+   * @param {boolean} includeRaw - Include raw YAML data
+   * @param {number} depth - Current recursion depth (default: 0)
+   */
+  async parseBlueprintDirectory(dirPath, domain, includeRaw, depth = 0) {
+    const MAX_DEPTH = 5; // Prevent excessive recursion
+    const items = [];
+
+    // Security: Prevent stack overflow from malicious directory structures
+    if (depth > MAX_DEPTH) {
+      logger.warn(`Blueprint directory depth exceeded at: ${dirPath}`);
+      return items;
+    }
+
+    // Security: Ensure path is still within blueprints directory (prevent traversal)
+    const blueprintsDir = path.join(this.configPath, 'blueprints');
+    const normalizedPath = path.resolve(dirPath);
+    const normalizedBlueprintsDir = path.resolve(blueprintsDir);
+
+    if (!normalizedPath.startsWith(normalizedBlueprintsDir)) {
+      logger.warn(`Path traversal attempt detected: ${dirPath}`);
+      return items;
+    }
+
+    try {
+      const files = await fs.readdir(dirPath, { withFileTypes: true });
+
+      for (const file of files) {
+        // Security: Skip hidden files and symlinks
+        if (file.name.startsWith('.') || file.isSymbolicLink()) {
+          logger.debug(`Skipping hidden/symlink file: ${file.name}`);
+          continue;
+        }
+
+        const filePath = path.join(dirPath, file.name);
+
+        if (file.isDirectory()) {
+          // Recursively parse subdirectories with incremented depth
+          const subItems = await this.parseBlueprintDirectory(
+            filePath,
+            domain,
+            includeRaw,
+            depth + 1
+          );
+          items.push(...subItems);
+        } else if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
+          try {
+            const content = await fs.readFile(filePath, 'utf8');
+            const blueprint = yaml.load(content);
+
+            if (blueprint && blueprint.blueprint) {
+              const relativePath = path.relative(this.configPath, filePath);
+              const blueprintId = this.generateBlueprintId(relativePath);
+
+              items.push({
+                id: blueprintId,
+                type: 'blueprint',
+                name: blueprint.blueprint.name || file.name.replace(/\.ya?ml$/, ''),
+                description: blueprint.blueprint.description || '',
+                domain: blueprint.blueprint.domain || domain,
+                file: relativePath,
+                ...(includeRaw && { raw: blueprint })
+              });
+            }
+          } catch (error) {
+            logger.warn(`Failed to parse blueprint ${filePath}: ${error.message}`);
+          }
+        }
+      }
+    } catch (error) {
+      logger.warn(`Failed to read blueprint directory ${dirPath}: ${error.message}`);
+    }
+
+    return items;
+  }
+
+  /**
+   * Generate blueprint ID from file path
+   */
+  generateBlueprintId(relativePath) {
+    return relativePath
+      .replace(/^blueprints\//, '')
+      .replace(/\.ya?ml$/, '')
+      .replace(/\//g, '_');
+  }
+
+  /**
+   * Parse voice assistants (Assist pipelines)
+   * @param {boolean} includeRaw - Include raw JSON object (default: true)
+   */
+  async parseVoiceAssistants(includeRaw = true) {
+    try {
+      const items = [];
+      const pipelineFile = path.join(this.configPath, '.storage/assist_pipeline');
+
+      if (await this.fileExists(pipelineFile)) {
+        const content = await fs.readFile(pipelineFile, 'utf8');
+        const data = JSON.parse(content);
+
+        if (data.data && data.data.pipelines) {
+          data.data.pipelines.forEach((pipeline, index) => {
+            items.push({
+              id: pipeline.id || `pipeline_${index}`,
+              type: 'voice_assistant',
+              name: pipeline.name || `Pipeline ${index + 1}`,
+              description: `${pipeline.conversation_engine} | ${pipeline.stt_engine} → ${pipeline.tts_engine}`,
+              language: pipeline.language || 'en',
+              file: '.storage/assist_pipeline',
+              index: index,
+              ...(includeRaw && { raw: pipeline })
+            });
+          });
+        }
+
+        logger.info(`Parsed ${items.length} voice assistant pipeline(s)`);
+      }
+
+      return items;
+    } catch (error) {
+      logger.error('Failed to parse voice assistants:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Parse conversation intents from configuration.yaml
+   * @param {boolean} includeRaw - Include raw YAML object (default: true)
+   */
+  async parseConversationIntents(includeRaw = true) {
+    try {
+      const items = [];
+      const configFile = path.join(this.configPath, 'configuration.yaml');
+
+      if (await this.fileExists(configFile)) {
+        const content = await fs.readFile(configFile, 'utf8');
+        const config = yaml.load(content);
+
+        if (config && config.conversation && config.conversation.intents) {
+          Object.entries(config.conversation.intents).forEach(([intentName, intentData], index) => {
+            items.push({
+              id: intentName,
+              type: 'conversation_intent',
+              name: intentName,
+              description: Array.isArray(intentData) ? `${intentData.length} response(s)` : 'Intent',
+              file: 'configuration.yaml',
+              index: index,
+              ...(includeRaw && { raw: intentData })
+            });
+          });
+
+          logger.info(`Parsed ${items.length} conversation intent(s)`);
+        }
+      }
+
+      return items;
+    } catch (error) {
+      logger.error('Failed to parse conversation intents:', error);
       return [];
     }
   }
@@ -342,6 +547,209 @@ class HAParser {
   }
 
   /**
+   * Parse blueprint configurations from blueprints directory
+   */
+  async parseBlueprints() {
+    try {
+      const items = [];
+      const blueprintsDir = path.join(this.configPath, 'blueprints');
+
+      // Check if blueprints directory exists
+      const exists = await this.fileExists(blueprintsDir);
+
+      if (!exists) {
+        logger.debug('Blueprints directory not found');
+        return items;
+      }
+
+      // Parse automation blueprints
+      const automationBlueprintsDir = path.join(blueprintsDir, 'automation');
+      if (await this.fileExists(automationBlueprintsDir)) {
+        const automationBlueprints = await this.parseBlueprintsFromDir(
+          automationBlueprintsDir,
+          'automation'
+        );
+        items.push(...automationBlueprints);
+      }
+
+      // Parse script blueprints
+      const scriptBlueprintsDir = path.join(blueprintsDir, 'script');
+      if (await this.fileExists(scriptBlueprintsDir)) {
+        const scriptBlueprints = await this.parseBlueprintsFromDir(
+          scriptBlueprintsDir,
+          'script'
+        );
+        items.push(...scriptBlueprints);
+      }
+
+      logger.info(`Parsed ${items.length} blueprint(s)`);
+      return items;
+    } catch (error) {
+      logger.error('Failed to parse blueprints:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Helper method to parse blueprints from a specific directory
+   */
+  async parseBlueprintsFromDir(dirPath, blueprintType) {
+    const items = [];
+
+    try {
+      const files = await fs.readdir(dirPath, { withFileTypes: true });
+
+      for (const entry of files) {
+        const fullPath = path.join(dirPath, entry.name);
+
+        if (entry.isDirectory()) {
+          // Recursively parse subdirectories
+          const subItems = await this.parseBlueprintsFromDir(fullPath, blueprintType);
+          items.push(...subItems);
+        } else if (entry.name.endsWith('.yaml') || entry.name.endsWith('.yml')) {
+          try {
+            const content = await fs.readFile(fullPath, 'utf8');
+            const config = yaml.load(content);
+
+            if (config && config.blueprint) {
+              const relativePath = path.relative(this.configPath, fullPath);
+              const blueprint = config.blueprint;
+
+              items.push({
+                id: relativePath.replace(/\.ya?ml$/, '').replace(/\//g, '_'),
+                type: 'blueprint',
+                blueprintType: blueprintType,
+                name: blueprint.name || entry.name.replace(/\.ya?ml$/, ''),
+                description: blueprint.description || '',
+                domain: blueprint.domain || blueprintType,
+                author: blueprint.author || 'Unknown',
+                source_url: blueprint.source_url || '',
+                file: relativePath,
+                inputs: Object.keys(blueprint.input || {}),
+                raw: config
+              });
+            }
+          } catch (error) {
+            logger.warn(`Failed to parse blueprint ${entry.name}: ${error.message}`);
+          }
+        }
+      }
+    } catch (error) {
+      logger.warn(`Failed to read blueprint directory ${dirPath}: ${error.message}`);
+    }
+
+    return items;
+  }
+
+  /**
+   * Parse voice assistant configurations
+   */
+  async parseVoiceAssistants() {
+    try {
+      const items = [];
+      const storageDir = path.join(this.configPath, '.storage');
+
+      // Check if .storage directory exists
+      const exists = await this.fileExists(storageDir);
+
+      if (!exists) {
+        logger.debug('.storage directory not found');
+        return items;
+      }
+
+      // Parse assist pipeline configurations
+      const assistFile = path.join(storageDir, 'assist_pipeline');
+      if (await this.fileExists(assistFile)) {
+        try {
+          const content = await fs.readFile(assistFile, 'utf8');
+          const data = JSON.parse(content);
+
+          if (data && data.data && data.data.items) {
+            data.data.items.forEach((pipeline, index) => {
+              items.push({
+                id: pipeline.id || `pipeline_${index}`,
+                type: 'voice_assistant',
+                subtype: 'assist_pipeline',
+                name: pipeline.name || 'Unnamed Pipeline',
+                description: `Language: ${pipeline.language || 'unknown'}`,
+                language: pipeline.language || 'unknown',
+                conversation_engine: pipeline.conversation_engine || 'none',
+                conversation_language: pipeline.conversation_language || pipeline.language,
+                stt_engine: pipeline.stt_engine || 'none',
+                stt_language: pipeline.stt_language || pipeline.language,
+                tts_engine: pipeline.tts_engine || 'none',
+                tts_language: pipeline.tts_language || pipeline.language,
+                tts_voice: pipeline.tts_voice || 'none',
+                wake_word_entity: pipeline.wake_word_entity || null,
+                wake_word_id: pipeline.wake_word_id || null,
+                file: '.storage/assist_pipeline',
+                raw: pipeline
+              });
+            });
+          }
+        } catch (error) {
+          logger.warn(`Failed to parse assist pipeline: ${error.message}`);
+        }
+      }
+
+      // Parse conversation agents
+      const conversationFile = path.join(storageDir, 'conversation');
+      if (await this.fileExists(conversationFile)) {
+        try {
+          const content = await fs.readFile(conversationFile, 'utf8');
+          const data = JSON.parse(content);
+
+          if (data && data.data) {
+            items.push({
+              id: 'conversation_agent',
+              type: 'voice_assistant',
+              subtype: 'conversation_agent',
+              name: 'Conversation Agent',
+              description: `Agent: ${data.data.agent_id || 'default'}`,
+              agent_id: data.data.agent_id || 'conversation.home_assistant',
+              file: '.storage/conversation',
+              raw: data
+            });
+          }
+        } catch (error) {
+          logger.warn(`Failed to parse conversation agent: ${error.message}`);
+        }
+      }
+
+      // Parse intent scripts (if exists in YAML)
+      const intentScriptFile = path.join(this.configPath, 'intent_script.yaml');
+      if (await this.fileExists(intentScriptFile)) {
+        try {
+          const content = await fs.readFile(intentScriptFile, 'utf8');
+          const config = yaml.load(content);
+
+          if (config && typeof config === 'object') {
+            Object.entries(config).forEach(([intentName, intentConfig]) => {
+              items.push({
+                id: `intent_${intentName}`,
+                type: 'voice_assistant',
+                subtype: 'intent_script',
+                name: intentName,
+                description: intentConfig.speech?.text || 'Custom intent handler',
+                file: 'intent_script.yaml',
+                raw: intentConfig
+              });
+            });
+          }
+        } catch (error) {
+          logger.warn(`Failed to parse intent scripts: ${error.message}`);
+        }
+      }
+
+      logger.info(`Parsed ${items.length} voice assistant configuration(s)`);
+      return items;
+    } catch (error) {
+      logger.error('Failed to parse voice assistant configurations:', error);
+      return [];
+    }
+  }
+
+  /**
    * Parse all HA items
    * @param {Object} options - Parsing options
    * @param {boolean} options.includeRaw - Include raw YAML objects (default: false to save memory)
@@ -359,7 +767,10 @@ class HAParser {
       const parsers = {
         automations: () => this.parseAutomations(includeRaw),
         scripts: () => this.parseScripts(includeRaw),
-        scenes: () => this.parseScenes(includeRaw)
+        scenes: () => this.parseScenes(includeRaw),
+        blueprints: () => this.parseBlueprints(includeRaw),
+        voice_assistants: () => this.parseVoiceAssistants(includeRaw),
+        conversation_intents: () => this.parseConversationIntents(includeRaw)
       };
 
       // Add optional parsers if enabled
@@ -371,6 +782,12 @@ class HAParser {
       }
       if (this.backupLovelace) {
         parsers.lovelace = () => this.parseLovelaceDashboards(includeRaw);
+      }
+      if (this.parseBlueprints) {
+        parsers.blueprints = () => this.parseBlueprints(includeRaw);
+      }
+      if (this.parseVoiceAssistant) {
+        parsers.voice_assistants = () => this.parseVoiceAssistants(includeRaw);
       }
 
       // If specific types requested, filter parsers
@@ -416,9 +833,14 @@ class HAParser {
         automations: results.automations || [],
         scripts: results.scripts || [],
         scenes: results.scenes || [],
+        blueprints: results.blueprints || [],
+        voice_assistants: results.voice_assistants || [],
+        conversation_intents: results.conversation_intents || [],
         esphome: results.esphome || [],
         packages: results.packages || [],
         lovelace: results.lovelace || [],
+        blueprints: results.blueprints || [],
+        voice_assistants: results.voice_assistants || [],
         total
       };
 
@@ -447,6 +869,15 @@ class HAParser {
         case 'scene':
           items = await this.parseScenes();
           break;
+        case 'blueprint':
+          items = await this.parseBlueprints();
+          break;
+        case 'voice_assistant':
+          items = await this.parseVoiceAssistants();
+          break;
+        case 'conversation_intent':
+          items = await this.parseConversationIntents();
+          break;
         case 'esphome':
           items = await this.parseESPHome();
           break;
@@ -454,7 +885,14 @@ class HAParser {
           items = await this.parsePackages();
           break;
         case 'lovelace_dashboard':
+        case 'dashboard':
           items = await this.parseLovelaceDashboards();
+          break;
+        case 'blueprint':
+          items = await this.parseBlueprints();
+          break;
+        case 'voice_assistant':
+          items = await this.parseVoiceAssistants();
           break;
         default:
           throw new Error(`Unknown item type: ${type}`);
@@ -463,6 +901,40 @@ class HAParser {
       return items.find(item => item.id === id);
     } catch (error) {
       logger.error(`Failed to get item ${type}:${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all items of a specific type
+   */
+  async getItemsByType(type, includeRaw = false) {
+    try {
+      switch (type) {
+        case 'automation':
+          return await this.parseAutomations(includeRaw);
+        case 'script':
+          return await this.parseScripts(includeRaw);
+        case 'scene':
+          return await this.parseScenes(includeRaw);
+        case 'blueprint':
+          return await this.parseBlueprints(includeRaw);
+        case 'voice_assistant':
+          return await this.parseVoiceAssistants(includeRaw);
+        case 'conversation_intent':
+          return await this.parseConversationIntents(includeRaw);
+        case 'esphome':
+          return await this.parseESPHome(includeRaw);
+        case 'package':
+          return await this.parsePackages(includeRaw);
+        case 'lovelace_dashboard':
+        case 'dashboard':
+          return await this.parseLovelaceDashboards(includeRaw);
+        default:
+          throw new Error(`Unknown item type: ${type}`);
+      }
+    } catch (error) {
+      logger.error(`Failed to get items of type ${type}:`, error);
       throw error;
     }
   }

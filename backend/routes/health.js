@@ -35,14 +35,24 @@ router.get('/', async (req, res) => {
   }
 
   // Check memory usage
+  // Configurable memory threshold for different RPi models:
+  // - 128MB: RPi Zero (512MB RAM total)
+  // - 256MB: RPi 3 (1GB RAM total) - Default
+  // - 400MB: RPi 4 (2-8GB RAM total)
+  const memThresholdMB = parseInt(process.env.MEM_THRESHOLD_MB || '256');
+  const memThreshold = memThresholdMB * 1024 * 1024;
   const memUsage = process.memoryUsage();
-  const memThreshold = 500 * 1024 * 1024; // 500MB
+  const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
   checks.memory = memUsage.heapUsed < memThreshold;
 
   if (!checks.memory) {
     status = 'degraded';
-    logger.warn('High memory usage detected:', {
-      heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) + 'MB'
+    logger.warn('High memory usage detected', {
+      heapUsedMB,
+      heapTotalMB: Math.round(memUsage.heapTotal / 1024 / 1024),
+      rssMB: Math.round(memUsage.rss / 1024 / 1024),
+      thresholdMB: memThresholdMB,
+      percentUsed: Math.round((heapUsedMB / memThresholdMB) * 100) + '%'
     });
   }
 

@@ -10,7 +10,11 @@ const {
   restoreLimiter,
   settingsLimiter,
   readLimiter,
-  statusLimiter
+  statusLimiter,
+  gitHistoryLimiter,
+  itemsLimiter,
+  entityHistoryLimiter,
+  batchLimiter
 } = require('./middleware/rate-limit');
 
 // Import routes
@@ -21,6 +25,8 @@ const restoreRoutes = require('./routes/restore');
 const settingsRoutes = require('./routes/settings');
 const statusRoutes = require('./routes/status');
 const notificationRoutes = require('./routes/notifications');
+const itemsRoutes = require('./routes/items');
+const gitRoutes = require('./routes/git');
 
 // Import services
 const GitService = require('./services/git-service');
@@ -34,9 +40,14 @@ const PORT = process.env.PORT || 8099;
 app.use(cors());
 
 // Compression middleware with streaming (replaces custom compression)
+// Configurable compression level for different RPi models:
+// - Level 4: For RPi Zero/weak CPUs (20-30% less CPU usage)
+// - Level 6: Default balanced setting (recommended for RPi 3+)
+// - Level 9: Maximum compression (not recommended for RPi)
+const compressionLevel = parseInt(process.env.COMPRESSION_LEVEL || '6');
 app.use(compression({
   threshold: 1024, // Only compress responses > 1KB
-  level: 6, // Balance between CPU and compression ratio
+  level: compressionLevel,
   filter: (req, res) => {
     if (req.headers['x-no-compression']) {
       return false;
@@ -78,8 +89,25 @@ app.use('/api/backup', backupLimiter);
 app.use('/api/restore', restoreLimiter);
 app.use('/api/settings', settingsLimiter);
 app.use('/api/history', readLimiter);
+app.use('/api/history/entity', entityHistoryLimiter); // More restrictive for entity history
+app.use('/api/history/batch', batchLimiter); // Most restrictive for batch operations
 app.use('/api/status', statusLimiter);
 app.use('/api/notifications', readLimiter);
+app.use('/api/items', itemsLimiter); // Specialized limiter for items
+app.use('/api/git', gitHistoryLimiter); // Specialized limiter for Git operations
+
+// HTTP cache headers for GET requests to reduce redundant requests
+// Reduces load on RPi by allowing browser to cache read-only data
+app.use((req, res, next) => {
+  if (req.method === 'GET' && req.path.startsWith('/api/')) {
+    // Cache GET requests for 5 minutes (300 seconds)
+    // Excludes health checks which should always be fresh
+    if (!req.path.includes('/health')) {
+      res.set('Cache-Control', 'private, max-age=300');
+    }
+  }
+  next();
+});
 
 // API Routes
 app.use('/api', apiRoutes);
@@ -89,6 +117,8 @@ app.use('/api/restore', restoreRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/status', statusRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/items', itemsRoutes);
+app.use('/api/git', gitRoutes);
 
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
@@ -136,7 +166,7 @@ async function initializeServices() {
     }
 
     logger.info('Initializing scheduler...');
-    const scheduler = new Scheduler(gitService);
+    const scheduler = new Scheduler(gitService, db);
     app.locals.scheduler = scheduler;
 
     if (process.env.SCHEDULED_BACKUP_ENABLED === 'true') {
@@ -168,6 +198,26 @@ async function startServer() {
     process.exit(1);
   }
 }
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Promise Rejection:', {
+    reason: reason,
+    promise: promise
+  });
+  // Exit process to allow restart (especially important in containerized environments)
+  process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', {
+    error: error.message,
+    stack: error.stack
+  });
+  // Exit process to allow restart
+  process.exit(1);
+});
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

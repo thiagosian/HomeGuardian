@@ -21,14 +21,13 @@ FROM ${BUILD_FROM}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install only runtime dependencies (removed build tools: make, g++)
+# Optimized for Raspberry Pi: removed python3 (~60MB) and py3-setuptools (~5MB)
 RUN apk add --no-cache \
     git \
     openssh \
     nodejs \
     npm \
-    sqlite \
-    python3 \
-    py3-setuptools
+    sqlite
 
 # Set working directory
 WORKDIR /app

@@ -1,29 +1,18 @@
 import { useState, useEffect } from 'react'
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  Typography,
-  Alert,
-} from '@mui/material'
-import {
-  Visibility as VisibilityIcon,
-  Restore as RestoreIcon,
-  Close as CloseIcon,
-} from '@mui/icons-material'
 import { useTranslation } from 'react-i18next'
-import { api } from '../api/client'
 import { format } from 'date-fns'
+import { Eye, Loader2 } from 'lucide-react'
+import { api } from '../api/client'
+import { Button } from '../components/ui/button'
+import { Card, CardContent } from '../components/ui/card'
+import { Alert, AlertDescription } from '../components/ui/alert'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog'
 import DiffViewer from '../components/DiffViewer'
 
 export default function History() {
@@ -70,95 +59,76 @@ export default function History() {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     )
   }
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        {t('history.title')}
-      </Typography>
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold tracking-tight">{t('history.title')}</h1>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       {history.length === 0 ? (
         <Card>
-          <CardContent>
-            <Typography variant="body1" color="text.secondary">
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">
               {t('history.noHistory')}
-            </Typography>
+            </p>
           </CardContent>
         </Card>
       ) : (
-        <List>
+        <div className="space-y-3">
           {history.map((commit) => (
-            <Card key={commit.hash} sx={{ mb: 2 }}>
-              <ListItem
-                secondaryAction={
-                  <Box>
-                    <IconButton
-                      edge="end"
-                      onClick={() => handleViewDiff(commit)}
-                      sx={{ mr: 1 }}
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
-                  </Box>
-                }
-              >
-                <ListItemText
-                  primary={commit.message}
-                  secondary={
-                    <>
-                      <Typography variant="caption" display="block">
+            <Card key={commit.hash} className="hover:border-primary/50 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {commit.message}
+                    </p>
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-xs text-muted-foreground font-mono">
                         {commit.shortHash} • {commit.author}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      </p>
+                      <p className="text-xs text-muted-foreground">
                         {format(new Date(commit.date), 'PPpp')}
-                      </Typography>
-                    </>
-                  }
-                />
-              </ListItem>
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleViewDiff(commit)}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                </div>
+              </CardContent>
             </Card>
           ))}
-        </List>
+        </div>
       )}
 
       {/* Diff Dialog */}
-      <Dialog
-        open={diffOpen}
-        onClose={handleCloseDiff}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6">
-              {selectedCommit?.message}
-            </Typography>
-            <IconButton onClick={handleCloseDiff}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-          <Typography variant="caption" color="text.secondary">
-            {selectedCommit?.shortHash} • {selectedCommit?.author}
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
+      <Dialog open={diffOpen} onOpenChange={setDiffOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedCommit?.message}</DialogTitle>
+            <DialogDescription className="font-mono text-xs">
+              {selectedCommit?.shortHash} • {selectedCommit?.author}
+            </DialogDescription>
+          </DialogHeader>
           {diff && <DiffViewer diff={diff} />}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDiff}>{t('common.close')}</Button>
-        </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   )
 }

@@ -1,0 +1,38 @@
+{
+  "name": "homeguardian-ui",
+  "version": "1.1.0",
+  "description": "HACS frontend integration for HomeGuardian - Icon-based version control UI",
+  "main": "custom_components/homeguardian_ui/www/dist/homeguardian-ui.js",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "keywords": [
+    "home-assistant",
+    "hacs",
+    "git",
+    "version-control",
+    "lovelace"
+  ],
+  "author": "thiagosian",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
+    "lit": "^3.1.2",
+    "prettier": "^3.2.5",
+    "rollup": "^4.12.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "lit": "^3.1.2"
+  }
+}

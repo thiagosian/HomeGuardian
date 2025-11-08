@@ -1,9 +1,8 @@
 import { useMemo, useCallback, memo } from 'react'
-import { Box, Typography, useTheme, Alert } from '@mui/material'
+import { Alert, AlertDescription } from './ui/alert'
+import { AlertCircle } from 'lucide-react'
 
 const DiffViewer = memo(function DiffViewer({ diff }) {
-  const theme = useTheme()
-
   // Memoize line parsing
   const lines = useMemo(() => {
     if (!diff) return []
@@ -11,94 +10,60 @@ const DiffViewer = memo(function DiffViewer({ diff }) {
   }, [diff])
 
   // Memoize getLineStyle function
-  const getLineStyle = useCallback((line) => {
+  const getLineClassName = useCallback((line) => {
     if (line.startsWith('+')) {
-      return {
-        backgroundColor: theme.palette.diff.addedBg,
-        color: theme.palette.diff.addedText,
-      }
+      return 'bg-green-500/10 text-green-400'
     } else if (line.startsWith('-')) {
-      return {
-        backgroundColor: theme.palette.diff.removedBg,
-        color: theme.palette.diff.removedText,
-      }
+      return 'bg-red-500/10 text-red-400'
     } else if (line.startsWith('@@')) {
-      return {
-        backgroundColor: theme.palette.diff.headerBg,
-        color: theme.palette.diff.headerText,
-      }
+      return 'bg-blue-500/10 text-blue-400 font-semibold'
     }
-    return { color: theme.palette.text.primary }
-  }, [theme])
+    return 'text-foreground'
+  }, [])
 
   if (!diff) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <p className="text-sm text-muted-foreground">
         No changes to display
-      </Typography>
+      </p>
     )
   }
 
   // Warn for very large diffs and show first 1000 lines
   if (lines.length > 1000) {
     return (
-      <Box>
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Large diff detected ({lines.length} lines). Showing first 1000 lines to prevent performance issues.
+      <div className="space-y-3">
+        <Alert variant="warning">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Large diff detected ({lines.length} lines). Showing first 1000 lines to prevent performance issues.
+          </AlertDescription>
         </Alert>
-        <Box
-          sx={{
-            fontFamily: 'monospace',
-            fontSize: '0.875rem',
-            backgroundColor: theme.palette.diff.viewerBg,
-            borderRadius: 1,
-            p: 2,
-            overflowX: 'auto',
-          }}
-        >
+        <div className="font-mono text-sm bg-card border rounded-lg p-4 overflow-x-auto">
           {lines.slice(0, 1000).map((line, index) => (
-            <Box
+            <div
               key={`line-${index}`}
-              sx={{
-                ...getLineStyle(line),
-                px: 1,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-all',
-              }}
+              className={`px-2 whitespace-pre-wrap break-all ${getLineClassName(line)}`}
             >
               {line || ' '}
-            </Box>
+            </div>
           ))}
-        </Box>
-      </Box>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Box
-      sx={{
-        fontFamily: 'monospace',
-        fontSize: '0.875rem',
-        backgroundColor: theme.palette.diff.viewerBg,
-        borderRadius: 1,
-        p: 2,
-        overflowX: 'auto',
-      }}
-    >
+    <div className="font-mono text-sm bg-card border rounded-lg p-4 overflow-x-auto">
       {lines.map((line, index) => (
-        <Box
+        <div
           key={`line-${index}`}
-          sx={{
-            ...getLineStyle(line),
-            px: 1,
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-all',
-          }}
+          className={`px-2 whitespace-pre-wrap break-all ${getLineClassName(line)}`}
         >
           {line || ' '}
-        </Box>
+        </div>
       ))}
-    </Box>
+    </div>
   )
 })
 
