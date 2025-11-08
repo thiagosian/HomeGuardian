@@ -1,287 +1,249 @@
 # Release Process
 
-This project uses [Release Please](https://github.com/googleapis/release-please) to automate version management and releases.
+This project uses [Semantic Release](https://github.com/semantic-release/semantic-release) with custom rules for strict version control.
 
 ## Project Versioning Policy
 
-**This project follows a PATCH-FIRST versioning strategy:**
+**This project uses EXPLICIT version control with PATCH-FIRST strategy:**
 
-- **Default**: PATCH bumps (1.5.2 → 1.5.3 → 1.5.4 → ... → 1.5.999)
-- **Explicit**: MINOR bumps only when explicitly needed (1.5.x → 1.6.0)
-- **Breaking**: MAJOR bumps only for breaking changes (1.x.x → 2.0.0)
+### Version Format: X.Y.Z
 
-**Use PATCH-bump commit types for all normal development:**
-- `fix:`, `chore:`, `refactor:`, `docs:`, `perf:`, `build:`, `ci:`, `test:`
+- **X (Major)**: NEVER auto-increments. Requires `[MAJOR]` marker in commit message
+- **Y (Minor)**: NEVER auto-increments. Requires `[MINOR]` marker in commit message
+- **Z (Patch)**: AUTO-increments by default for ANY commit
+- **Y and Z can go up to 999** (e.g., 1.5.999 → 1.6.0, or 1.999.0 → 2.0.0)
 
-**Use `feat:` ONLY when you explicitly want a MINOR version bump.**
+### Version Bump Rules
+
+| Commit Message | Version Bump | Example |
+|----------------|--------------|---------|
+| `ANY commit without marker` | **PATCH** (X.Y.Z → X.Y.Z+1) | 1.5.2 → 1.5.3 |
+| `Message [MINOR]` or `[minor]` | **MINOR** (X.Y.Z → X.Y+1.0) | 1.5.999 → 1.6.0 |
+| `Message [MAJOR]` or `[major]` | **MAJOR** (X.Y.Z → X+1.0.0) | 1.999.0 → 2.0.0 |
 
 ## How It Works
 
-Release Please automatically:
-1. **Analyzes commits** since the last release using [Conventional Commits](https://www.conventionalcommits.org/)
-2. **Determines version bump** (major, minor, or patch) based on commit types
-3. **Creates a Release PR** with updated version numbers and CHANGELOG
-4. **Creates a GitHub Release** when the Release PR is merged
+Semantic Release automatically:
+1. **Analyzes commits** since the last release/tag
+2. **Determines version bump** based on markers (`[MINOR]`, `[MAJOR]`, or default PATCH)
+3. **Updates all version files** (config.yaml, Dockerfile, package.json, package-lock.json)
+4. **Creates a Git tag** (e.g., `v1.5.3`)
+5. **Creates a GitHub Release** with auto-generated changelog
+6. **All automatic** - no PRs to merge, happens on push to `main`
 
-## Commit Message Format
+## Commit Message Examples
 
-Use [Conventional Commits](https://www.conventionalcommits.org/) format:
+### ✅ DEFAULT: Patch Bump (1.5.2 → 1.5.3)
 
-```
-<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-### Types and Version Bumps
-
-**⚠️ IMPORTANT: Use PATCH-bump types by default! Only use `feat:` when you explicitly want a MINOR version bump.**
-
-| Type | Version Bump | When to Use | Example |
-|------|--------------|-------------|---------|
-| `fix:` | **Patch** (1.5.x) ✅ DEFAULT | Bug fixes | `fix: resolve Docker build error` |
-| `chore:` | **Patch** (1.5.x) ✅ DEFAULT | Maintenance, deps | `chore: update dependencies` |
-| `refactor:` | **Patch** (1.5.x) ✅ DEFAULT | Code improvements | `refactor: simplify auth logic` |
-| `perf:` | **Patch** (1.5.x) ✅ DEFAULT | Performance | `perf: optimize Git operations` |
-| `docs:` | **Patch** (1.5.x) ✅ DEFAULT | Documentation | `docs: update API reference` |
-| `build:` | **Patch** (1.5.x) ✅ DEFAULT | Build system | `build: update Docker config` |
-| `ci:` | **Patch** (1.5.x) ✅ DEFAULT | CI/CD changes | `ci: add release workflow` |
-| `test:` | **Patch** (1.5.x) ✅ DEFAULT | Tests only | `test: add unit tests` |
-| `feat:` | **Minor** (1.x.0) ⚠️ EXPLICIT | New features (use sparingly) | `feat: add backup encryption` |
-| `BREAKING CHANGE:` | **Major** (x.0.0) ⚠️ EXPLICIT | Breaking changes | See below |
-
-**✅ Recommended workflow:**
-- 99% of commits should use PATCH-bump types (`fix:`, `chore:`, `refactor:`, etc.)
-- Patch version can go up to .999 without issues (1.5.2 → 1.5.999)
-- Only use `feat:` when you consciously want to bump MINOR version
-- Only use `BREAKING CHANGE:` for actual breaking changes
-
-### Breaking Changes
-
-To trigger a **major version bump**, include `BREAKING CHANGE:` in the commit footer:
-
-```
-feat: migrate to new authentication system
-
-BREAKING CHANGE: The old API key authentication has been removed.
-Users must migrate to OAuth2. See migration guide in docs/MIGRATION.md
-```
-
-Or use `!` after the type:
-
-```
-feat!: remove support for Node.js 16
-```
-
-## Examples
-
-### ✅ Normal Development (Patch bump: 1.5.2 → 1.5.3)
-
-Most commits should be PATCH bumps:
+**99% of commits should be like this - NO marker needed:**
 
 ```bash
-# Bug fix
-fix: resolve package-lock.json missing in Docker build
-
-# Add new functionality (but use chore/refactor instead of feat)
-chore: add support for multi-repository management
-
-# Improve existing code
-refactor: simplify authentication logic
-
-# Performance improvement
-perf: optimize Git diff calculation
-
-# Documentation
-docs: update installation guide
-
-# Maintenance
-chore: update dependencies to latest versions
-
-# CI/CD
-ci: add automated Docker image builds
+git commit -m "fix: resolve Docker build error"
+git commit -m "chore: update dependencies"
+git commit -m "feat: add backup encryption feature"
+git commit -m "docs: update installation guide"
+git commit -m "refactor: simplify authentication logic"
 ```
 
-### ⚠️ Explicit Minor Bump (1.5.2 → 1.6.0)
+**Result:** Version bumps from 1.5.2 → 1.5.3 automatically
 
-Use `feat:` ONLY when you explicitly want a MINOR bump:
+### ⚠️ EXPLICIT: Minor Bump (1.5.2 → 1.6.0)
+
+**Use ONLY when you consciously want a minor version bump:**
 
 ```bash
-feat: major UI redesign with new component library
-
-This is a significant milestone that warrants a minor version bump.
-Includes complete redesign of the dashboard and settings pages.
+git commit -m "feat: major UI redesign [MINOR]"
 ```
 
-### 🚨 Breaking Change (Major bump: 1.5.2 → 2.0.0)
-
-Use ONLY for actual breaking changes:
+Or:
 
 ```bash
-refactor!: redesign settings API
-
-BREAKING CHANGE: Settings API endpoints have been restructured.
-- /api/settings → /api/v2/configuration
-- Request/response format has changed
-Users must update their integrations.
+git commit -m "chore: release milestone features [minor]"
 ```
+
+**Result:** Version bumps from 1.5.2 → 1.6.0
+
+### 🚨 EXPLICIT: Major Bump (1.5.2 → 2.0.0)
+
+**Use ONLY for breaking changes that warrant major version:**
+
+```bash
+git commit -m "refactor: redesign entire API structure [MAJOR]"
+```
+
+Or:
+
+```bash
+git commit -m "feat: breaking changes to settings format [major]"
+```
+
+**Result:** Version bumps from 1.5.2 → 2.0.0
 
 ## Release Workflow
 
-### 1. Develop with Conventional Commits
-
-Make changes and commit using conventional commits (prefer PATCH-bump types):
+### 1. Make changes and commit
 
 ```bash
-# ✅ RECOMMENDED: Use patch-bump types for most development
-git commit -m "chore: add scheduled backup feature"
-git commit -m "fix: resolve timezone issue in scheduler"
-git commit -m "refactor: improve error handling in Git service"
+# Normal development - just commit, NO marker needed
+git commit -m "fix: resolve memory leak in watcher"
+git commit -m "chore: add new backup feature"
+git commit -m "docs: update API documentation"
 git push origin main
 ```
 
-### 2. Release Please Creates a PR
+### 2. Automatic Release
 
-After commits are pushed to `main`, Release Please automatically:
-- Creates/updates a **Release PR**
-- Updates version in:
-  - `config.yaml`
-  - `Dockerfile`
-  - `backend/package.json`
-  - `frontend/package.json`
-  - `backend/package-lock.json`
-  - `frontend/package-lock.json`
-- Updates `CHANGELOG.md` with all changes
+When you push to `main`:
+- ✅ GitHub Actions workflow runs
+- ✅ Semantic Release analyzes commits
+- ✅ Version bumps to 1.5.3 (patch increment)
+- ✅ All files updated automatically
+- ✅ Git tag `v1.5.3` created
+- ✅ GitHub Release published
+- ✅ CHANGELOG.md updated
 
-### 3. Review the Release PR
+### 3. Check the Release
 
-Review the auto-generated Release PR:
-- Check version bump is correct
-- Verify CHANGELOG entries
-- Ensure all files are updated
-
-### 4. Merge the Release PR
-
-When you merge the Release PR:
-- Version numbers are updated in all files
-- CHANGELOG is updated
-- A Git tag is created (e.g., `v1.6.0`)
-- A GitHub Release is published
-
-### 5. Release is Published
-
-The release is now live! Users can:
-- See the release on GitHub Releases page
-- Install the new version from Home Assistant
-- View the CHANGELOG for what's new
-
-## Manual Version Override
-
-If you need to manually bump the version:
-
-1. Edit `.github/release-please-manifest.json`:
-   ```json
-   {
-     ".": "1.6.0"
-   }
-   ```
-
-2. Commit and push to `main`
-
-3. Release Please will use this version for the next release
-
-## Scopes (Optional)
-
-You can add scopes for better organization:
-
+Go to GitHub Releases page:
 ```
-feat(ui): add dark mode toggle
-fix(api): resolve authentication timeout
-docs(readme): add Docker Compose example
+https://github.com/thiagosian/HomeGuardian/releases
 ```
 
-## Multiple Commits in One Release
+You'll see:
+- New release `v1.5.3`
+- Auto-generated changelog
+- All changes since last release
 
-Release Please groups all commits since the last release:
+## Multiple Commits in One Push
 
 ```bash
-# ✅ RECOMMENDED: All patch bumps → 1.5.2 → 1.5.3
-git commit -m "chore: add backup encryption"
-git commit -m "chore: add backup compression"
-git commit -m "fix: resolve memory leak in watcher"
-git push
+git commit -m "fix: resolve timeout issue"
+git commit -m "chore: add compression feature"
+git commit -m "docs: update readme"
+git push origin main
 ```
 
-This creates one Release PR with:
-- Version bump: 1.5.2 → 1.5.3 (all patch = patch bump)
-- CHANGELOG with all three commits listed
+**Result:** One release created (v1.5.2 → v1.5.3) with all 3 commits in changelog
+
+## Version Examples
+
+### Going to 999
 
 ```bash
-# ⚠️ If you include a feat: → 1.5.2 → 1.6.0
-git commit -m "feat: major new feature set"
-git commit -m "chore: add backup compression"
-git commit -m "fix: resolve memory leak"
-git push
+# Patch can go to 999
+1.5.2 → 1.5.3 → ... → 1.5.999
+
+# Then use [MINOR] to bump
+git commit -m "chore: milestone release [MINOR]"
+# Result: 1.5.999 → 1.6.0
 ```
 
-This creates one Release PR with:
-- Version bump: 1.5.2 → 1.6.0 (one feat = minor bump)
-- CHANGELOG with all three commits listed
+```bash
+# Minor can go to 999
+1.5.0 → 1.6.0 → ... → 1.999.0
+
+# Then use [MAJOR] to bump
+git commit -m "refactor: breaking changes [MAJOR]"
+# Result: 1.999.0 → 2.0.0
+```
+
+## Tags and Releases
+
+### Automatic Tagging
+
+Every release creates a Git tag:
+```
+v1.5.3
+v1.5.4
+v1.6.0
+v2.0.0
+```
+
+### Latest Tag
+
+The most recent release is automatically tagged as `latest` on GitHub.
+
+### View All Releases
+
+```bash
+# List all tags
+git tag -l
+
+# Fetch latest tags
+git fetch --tags
+
+# Checkout specific version
+git checkout v1.5.3
+```
 
 ## Best Practices
 
-1. **DEFAULT TO PATCH BUMPS** - Use `fix:`, `chore:`, `refactor:` for 99% of commits
-2. **Avoid `feat:` unless necessary** - Only use when you explicitly want a MINOR bump
-3. **Always use conventional commits** - This ensures proper versioning
-4. **Write clear descriptions** - These become your CHANGELOG
-5. **One logical change per commit** - Makes CHANGELOG easier to read
-6. **Review Release PRs carefully** - They represent what users will see
-7. **Don't edit CHANGELOG manually** - Let Release Please manage it
-8. **Use scopes for clarity** - `chore(backup):`, `fix(ui):`, etc.
+1. **DEFAULT TO PATCH** - Don't add markers to 99% of commits
+2. **Use descriptive messages** - They become your changelog
+3. **[MINOR] for milestones** - Use when you want to mark a significant set of features
+4. **[MAJOR] for breaking changes** - Use very sparingly, only for actual API/config breaks
+5. **Commit frequently** - Each push to main creates ONE release with all commits
+6. **Check releases** - Review the auto-generated changelog after each push
 
-### Quick Reference Card
+## Quick Reference Card
 
 ```
-ALWAYS USE (99% of commits):
-  fix:      - Bug fixes
-  chore:    - New features, improvements, maintenance
-  refactor: - Code improvements
-  perf:     - Performance improvements
-  docs:     - Documentation
-  build:    - Build system
-  ci:       - CI/CD
-  test:     - Tests
+DEFAULT (no marker):
+  ANY commit → PATCH bump (Z+1)
+  Examples:
+    fix: resolve bug
+    feat: add feature
+    chore: maintenance
+    docs: documentation
+    refactor: improve code
+    perf: optimization
+    build: build system
+    ci: CI/CD
+    test: tests
 
-USE SPARINGLY (when you want minor bump):
-  feat:     - Major milestone features
+EXPLICIT [MINOR] or [minor]:
+  ANY commit [MINOR] → MINOR bump (Y+1, Z=0)
+  Example:
+    feat: milestone features [MINOR]
 
-USE RARELY (breaking changes only):
-  BREAKING CHANGE: - API changes that break compatibility
+EXPLICIT [MAJOR] or [major]:
+  ANY commit [MAJOR] → MAJOR bump (X+1, Y=0, Z=0)
+  Example:
+    refactor: breaking changes [MAJOR]
 ```
 
 ## Troubleshooting
 
-### Release PR not created?
+### Release not created?
 
 Check:
-- Commits use conventional commit format
 - Commits are pushed to `main` branch
 - GitHub Actions workflow is enabled
+- `GITHUB_TOKEN` has write permissions
+- There are new commits since last release
 
 ### Wrong version bump?
 
-- Check commit types match your intent
-- Use `!` or `BREAKING CHANGE:` for major bumps
-- Review `.github/release-please-config.json`
+Check commit message:
+- NO marker = patch (intended?)
+- Has `[MINOR]` = minor bump
+- Has `[MAJOR]` = major bump
 
 ### Files not updated?
 
-Check `extra-files` in `.github/release-please-config.json`
+Check `.github/scripts/update-versions.js` is updating all files correctly.
+
+## Comparison with Standard Semantic Versioning
+
+| Standard semver | This Project |
+|-----------------|--------------|
+| `feat:` → minor | `feat:` → **patch** |
+| `fix:` → patch | `fix:` → **patch** |
+| `BREAKING CHANGE` → major | `[MAJOR]` → **major** |
+| Auto major bumps | **NEVER** auto major |
 
 ## Resources
 
-- [Conventional Commits Specification](https://www.conventionalcommits.org/)
-- [Release Please Documentation](https://github.com/googleapis/release-please)
+- [Semantic Release Documentation](https://github.com/semantic-release/semantic-release)
 - [Semantic Versioning](https://semver.org/)
+- [Conventional Commits](https://www.conventionalcommits.org/)
