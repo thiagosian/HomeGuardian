@@ -3,6 +3,8 @@ node_modules/
 
 # Build outputs
 dist/
+# Exception: Allow HACS frontend compiled files
+!hacs-frontend/custom_components/homeguardian_ui/www/dist/
 build/
 *.log
 
