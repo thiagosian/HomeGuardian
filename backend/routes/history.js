@@ -192,4 +192,62 @@ router.get('/:commitHash/items', async (req, res) => {
   }
 });
 
+/**
+ * Get version history for a specific entity
+ * Path params:
+ *  - type: Entity type (automation, script, scene, etc.)
+ *  - id: Entity ID
+ * Query params:
+ *  - limit: Max number of commits (default: 10)
+ */
+router.get('/entity/:type/:id', async (req, res) => {
+  try {
+    const gitService = req.app.locals.gitService;
+    const { type, id } = req.params;
+    const limit = parseInt(req.query.limit) || 10;
+
+    logger.info(`Getting history for ${type}:${id}`);
+
+    // Get the item to find its file path
+    const item = await haParser.getItem(type, id);
+
+    if (!item) {
+      return res.status(404).json({
+        error: 'Entity not found',
+        type,
+        id
+      });
+    }
+
+    // Get file history
+    const fileHistory = await gitService.getFileHistory(item.file, limit);
+
+    // Build response with version info
+    const history = fileHistory.map(commit => ({
+      commit: {
+        hash: commit.hash,
+        message: commit.message,
+        author: commit.author_name,
+        date: commit.date,
+        files: [item.file]
+      },
+      affectsEntity: true
+    }));
+
+    res.json({
+      success: true,
+      entityId: id,
+      entityType: type,
+      versionCount: history.length,
+      history
+    });
+  } catch (error) {
+    logger.error(`Failed to get history for ${req.params.type}:${req.params.id}:`, error);
+    res.status(500).json({
+      error: 'Failed to get entity history',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;

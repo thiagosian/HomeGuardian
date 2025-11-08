@@ -21,6 +21,8 @@ const restoreRoutes = require('./routes/restore');
 const settingsRoutes = require('./routes/settings');
 const statusRoutes = require('./routes/status');
 const notificationRoutes = require('./routes/notifications');
+const itemsRoutes = require('./routes/items');
+const gitRoutes = require('./routes/git');
 
 // Import services
 const GitService = require('./services/git-service');
@@ -80,6 +82,8 @@ app.use('/api/settings', settingsLimiter);
 app.use('/api/history', readLimiter);
 app.use('/api/status', statusLimiter);
 app.use('/api/notifications', readLimiter);
+app.use('/api/items', readLimiter);
+app.use('/api/git', readLimiter);
 
 // API Routes
 app.use('/api', apiRoutes);
@@ -89,6 +93,8 @@ app.use('/api/restore', restoreRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/status', statusRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/items', itemsRoutes);
+app.use('/api/git', gitRoutes);
 
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
