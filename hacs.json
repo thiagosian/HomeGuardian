@@ -1,7 +1,5 @@
 {
   "name": "HomeGuardian UI",
-  "content_in_root": true,
-  "filename": "homeguardian-ui.js",
   "render_readme": true,
   "homeassistant": "2024.1.0",
   "country": ["US", "BR"]
