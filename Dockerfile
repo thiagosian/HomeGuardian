@@ -1,10 +1,26 @@
+# STAGE 1: Build Frontend
+FROM node:18-alpine AS frontend-builder
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci --only=production
+COPY frontend/ ./
+RUN npm run build && \
+    npm prune --production
+
+# STAGE 2: Build Backend Dependencies
+FROM node:18-alpine AS backend-builder
+WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm ci --only=production
+
+# STAGE 3: Final Runtime Image
 ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.22
 FROM ${BUILD_FROM}
 
 # Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install system dependencies
+# Install only runtime dependencies (removed build tools: make, g++)
 RUN apk add --no-cache \
     git \
     openssh \
@@ -12,27 +28,24 @@ RUN apk add --no-cache \
     npm \
     sqlite \
     python3 \
-    py3-setuptools \
-    make \
-    g++
+    py3-setuptools
 
 # Set working directory
 WORKDIR /app
 
-# Build frontend
-COPY frontend/package.json frontend/package-lock.json ./frontend/
-WORKDIR /app/frontend
-RUN npm ci
-COPY frontend/ ./
-RUN npm run build
-
-# Install backend dependencies
-WORKDIR /app/backend
-COPY backend/package*.json ./
-RUN npm install --only=production
+# Copy only built artifacts from build stages
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
 
 # Copy backend source
-COPY backend/ ./
+COPY backend/*.js ./backend/
+COPY backend/routes ./backend/routes
+COPY backend/services ./backend/services
+COPY backend/middleware ./backend/middleware
+COPY backend/utils ./backend/utils
+COPY backend/config ./backend/config
+COPY backend/migrations ./backend/migrations
+COPY backend/validation ./backend/validation
 
 # Copy run script
 COPY run.sh /
@@ -48,6 +61,10 @@ LABEL \
     io.hass.version="1.2.0" \
     io.hass.type="addon" \
     io.hass.arch="aarch64|amd64|armhf|armv7"
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget -q --spider http://localhost:8099/api/health/live || exit 1
 
 # Expose port
 EXPOSE 8099

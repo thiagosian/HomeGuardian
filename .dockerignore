@@ -1,6 +1,7 @@
 # Git
 .git/
 .gitignore
+.gitattributes
 
 # Node modules
 node_modules/
@@ -8,32 +9,71 @@ node_modules/
 # Development
 .env
 .env.local
+.env.development
+.env.test
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+.DS_Store
 
 # OS
-.DS_Store
 Thumbs.db
+desktop.ini
 
 # Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
 
 # Testing
 coverage/
 .nyc_output/
+__tests__/
+*.test.js
+*.spec.js
+test/
+tests/
+**/__mocks__/
 
 # Documentation
+docs/
 *.md
 !README.md
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE
 
-# Frontend build artifacts (node_modules will be installed during build)
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+.jenkins/
+
+# Frontend build artifacts
 frontend/node_modules/
 frontend/dist/
+frontend/src/
+frontend/.vite/
 
 # Build artifacts
-*.swp
-*.swo
-*~
+backend/scripts/
+dist/
+build/
+
+# Misc
+*.bak
+*.tmp
+*.cache
+.cache/
