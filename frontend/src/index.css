@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* ============================================================================
    HOMEGUARDIAN - CSS VARIABLES & THEMING SYSTEM
