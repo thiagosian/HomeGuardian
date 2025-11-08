@@ -20,6 +20,8 @@ RUN npm run build
 # node_modules will be copied to the final image for runtime
 FROM node:18-alpine AS backend-builder
 WORKDIR /app/backend
+# Install build tools needed for compiling native modules (sqlite3, etc.)
+RUN apk add --no-cache python3 make g++
 COPY backend/package*.json ./
 RUN npm ci --only=production
 
