@@ -65,7 +65,7 @@ const restoreFileSchema = z.object({
 
 const restoreItemSchema = z.object({
   id: z.string().min(1, 'Item ID cannot be empty'),
-  type: z.enum(['automation', 'script', 'scene']),
+  type: z.enum(['automation', 'script', 'scene', 'esphome', 'package', 'lovelace_dashboard', 'blueprint', 'voice_assistant']),
   commitHash: z.string()
     .length(40, 'Commit hash must be 40 characters')
     .regex(/^[0-9a-f]{40}$/i, 'Invalid commit hash format')
