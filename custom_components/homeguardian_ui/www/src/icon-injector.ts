@@ -79,13 +79,12 @@ export class IconInjector {
 
     // Define all injection tasks with error boundaries
     const injectionTasks = [
-      { name: 'automation', fn: () => this.injectAutomationIcon() },
-      { name: 'script', fn: () => this.injectScriptIcon() },
-      { name: 'scene', fn: () => this.injectSceneIcon() },
-      { name: 'blueprint', fn: () => this.injectBlueprintIcon() },
-      { name: 'blueprint-list', fn: () => this.injectBlueprintListIcons() },
-      { name: 'voice-assistant', fn: () => this.injectVoiceAssistantIcons() },
-      { name: 'dashboard', fn: () => this.injectDashboardIcons() },
+      { name: 'automation-list', fn: () => this.injectAutomationListIcons() },
+      { name: 'automation-info', fn: () => this.injectAutomationInfoIcon() },
+      { name: 'script-list', fn: () => this.injectScriptListIcons() },
+      { name: 'script-info', fn: () => this.injectScriptInfoIcon() },
+      { name: 'scene-list', fn: () => this.injectSceneListIcons() },
+      { name: 'dashboard-list', fn: () => this.injectDashboardListIcons() },
     ];
 
     // Execute all injections with error boundaries
@@ -128,198 +127,214 @@ export class IconInjector {
    * Check a specific element for injection points
    */
   private checkElement(element: Element): void {
-    // Check for automation editor
-    if (element.matches('ha-config-automation')) {
-      this.injectAutomationIcon();
+    // Check for automation list
+    if (element.matches('ha-automation-picker, ha-data-table')) {
+      this.injectAutomationListIcons();
     }
 
-    // Check for script editor
-    if (element.matches('ha-config-script')) {
-      this.injectScriptIcon();
+    // Check for script list
+    if (element.matches('ha-script-picker')) {
+      this.injectScriptListIcons();
     }
 
-    // Check for scene editor
-    if (element.matches('ha-config-scene')) {
-      this.injectSceneIcon();
+    // Check for scene list
+    if (element.matches('ha-scene-picker')) {
+      this.injectSceneListIcons();
     }
 
-    // Check for blueprint editor
-    if (element.matches('ha-blueprint-editor')) {
-      this.injectBlueprintIcon();
-    }
-
-    // Check for dashboard editor
-    if (element.matches('hui-view, hui-panel-view')) {
-      this.injectDashboardIcons();
+    // Check for config info panels
+    if (element.matches('ha-config-automation-info, ha-config-script-info')) {
+      this.injectAutomationInfoIcon();
     }
   }
 
   /**
-   * Inject icon for automation editor
+   * Inject icons in automation list page
    */
-  private async injectAutomationIcon(): Promise<void> {
-    // Try multiple selectors for robustness
-    const selectors = [
-      'ha-config-automation .header .name',
-      'ha-config-automation mwc-button[slot="toolbar-icon"]',
-      'ha-config-automation .toolbar .title',
-    ];
+  private async injectAutomationListIcons(): Promise<void> {
+    this.log('Injecting automation list icons');
 
-    for (const selector of selectors) {
-      const nameElement = document.querySelector(selector);
-      if (nameElement) {
-        const automationId = this.getAutomationIdFromURL();
-        if (automationId) {
-          await this.injectIcon(
-            nameElement,
-            'automation',
-            automationId,
-            'automation-icon'
-          );
-          break;
-        }
-      }
-    }
-  }
-
-  /**
-   * Inject icon for script editor
-   */
-  private async injectScriptIcon(): Promise<void> {
-    const selectors = [
-      'ha-config-script .header .name',
-      'ha-config-script mwc-button[slot="toolbar-icon"]',
-      'ha-config-script .toolbar .title',
-    ];
-
-    for (const selector of selectors) {
-      const nameElement = document.querySelector(selector);
-      if (nameElement) {
-        const scriptId = this.getScriptIdFromURL();
-        if (scriptId) {
-          await this.injectIcon(
-            nameElement,
-            'script',
-            scriptId,
-            'script-icon'
-          );
-          break;
-        }
-      }
-    }
-  }
-
-  /**
-   * Inject icon for scene editor
-   */
-  private async injectSceneIcon(): Promise<void> {
-    const selectors = [
-      'ha-config-scene .header .name',
-      'ha-config-scene mwc-button[slot="toolbar-icon"]',
-      'ha-config-scene .toolbar .title',
-    ];
-
-    for (const selector of selectors) {
-      const nameElement = document.querySelector(selector);
-      if (nameElement) {
-        const sceneId = this.getSceneIdFromURL();
-        if (sceneId) {
-          await this.injectIcon(nameElement, 'scene', sceneId, 'scene-icon');
-          break;
-        }
-      }
-    }
-  }
-
-  /**
-   * Inject icon for blueprint editor
-   */
-  private async injectBlueprintIcon(): Promise<void> {
-    const selectors = [
-      'ha-blueprint-editor .header .name',
-      'ha-blueprint-editor mwc-button[slot="toolbar-icon"]',
-    ];
-
-    for (const selector of selectors) {
-      const nameElement = document.querySelector(selector);
-      if (nameElement) {
-        const blueprintId = this.getBlueprintIdFromURL();
-        if (blueprintId) {
-          await this.injectIcon(
-            nameElement,
-            'blueprint',
-            blueprintId,
-            'blueprint-icon'
-          );
-          break;
-        }
-      }
-    }
-  }
-
-  /**
-   * Inject icons for blueprint list view
-   */
-  private async injectBlueprintListIcons(): Promise<void> {
-    const blueprintRows = document.querySelectorAll(
-      '.blueprint-row, [data-blueprint-id]'
+    // Look for automation rows in the data table
+    const rows = document.querySelectorAll(
+      'ha-data-table tr[data-automation-id], ' +
+      'ha-data-table .mdc-data-table__row, ' +
+      '.automation-row'
     );
 
-    for (const row of blueprintRows) {
-      const nameElement = row.querySelector('.name, .title');
-      const blueprintId = row.getAttribute('data-blueprint-id');
+    if (rows.length === 0) {
+      this.log('No automation rows found');
+      return;
+    }
 
-      if (nameElement && blueprintId) {
+    for (const row of rows) {
+      // Try to get automation ID from various sources
+      const automationId =
+        row.getAttribute('data-automation-id') ||
+        row.querySelector('[data-entity-id]')?.getAttribute('data-entity-id') ||
+        row.querySelector('.name, .title')?.textContent?.trim();
+
+      if (!automationId) continue;
+
+      // Find the name cell or title
+      const nameCell = row.querySelector('.name, .title, mwc-list-item');
+      if (nameCell && !nameCell.querySelector('.homeguardian-icon-container')) {
         await this.injectIcon(
-          nameElement,
-          'blueprint',
-          blueprintId,
-          `blueprint-list-icon-${blueprintId}`
+          nameCell,
+          'automation',
+          automationId,
+          `automation-list-${automationId}`
         );
       }
     }
   }
 
   /**
-   * Inject icons for voice assistant pipelines
+   * Inject icon in automation info/view page (not edit)
    */
-  private async injectVoiceAssistantIcons(): Promise<void> {
-    const pipelineRows = document.querySelectorAll(
-      '.pipeline-row, [data-pipeline-id]'
+  private async injectAutomationInfoIcon(): Promise<void> {
+    this.log('Injecting automation info icon');
+
+    const automationId = this.getAutomationIdFromURL();
+    if (!automationId) return;
+
+    // Look for the automation name in the info page
+    const selectors = [
+      'ha-config-automation-info .header',
+      '.automation-header .title',
+      'h1, h2, .name',
+    ];
+
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
+      if (element && !element.querySelector('.homeguardian-icon-container')) {
+        await this.injectIcon(
+          element,
+          'automation',
+          automationId,
+          'automation-info'
+        );
+        break;
+      }
+    }
+  }
+
+  /**
+   * Inject icons in script list page
+   */
+  private async injectScriptListIcons(): Promise<void> {
+    this.log('Injecting script list icons');
+
+    const rows = document.querySelectorAll(
+      'ha-data-table tr[data-script-id], ' +
+      'ha-data-table .mdc-data-table__row, ' +
+      '.script-row'
     );
 
-    for (const row of pipelineRows) {
-      const nameElement = row.querySelector('.name, .title');
-      const pipelineId = row.getAttribute('data-pipeline-id');
+    for (const row of rows) {
+      const scriptId =
+        row.getAttribute('data-script-id') ||
+        row.querySelector('[data-entity-id]')?.getAttribute('data-entity-id') ||
+        row.querySelector('.name, .title')?.textContent?.trim();
 
-      if (nameElement && pipelineId) {
+      if (!scriptId) continue;
+
+      const nameCell = row.querySelector('.name, .title, mwc-list-item');
+      if (nameCell && !nameCell.querySelector('.homeguardian-icon-container')) {
         await this.injectIcon(
-          nameElement,
-          'voice_assistant',
-          pipelineId,
-          `voice-assistant-icon-${pipelineId}`
+          nameCell,
+          'script',
+          scriptId,
+          `script-list-${scriptId}`
         );
       }
     }
   }
 
   /**
-   * Inject icons for dashboard configuration
+   * Inject icon in script info/view page
    */
-  private async injectDashboardIcons(): Promise<void> {
-    // Dashboard edit mode button
-    const dashboardButtons = document.querySelectorAll(
-      'hui-view mwc-icon-button[title*="Edit"], hui-panel-view mwc-icon-button[title*="Edit"]'
+  private async injectScriptInfoIcon(): Promise<void> {
+    this.log('Injecting script info icon');
+
+    const scriptId = this.getScriptIdFromURL();
+    if (!scriptId) return;
+
+    const selectors = [
+      'ha-config-script-info .header',
+      '.script-header .title',
+      'h1, h2, .name',
+    ];
+
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
+      if (element && !element.querySelector('.homeguardian-icon-container')) {
+        await this.injectIcon(
+          element,
+          'script',
+          scriptId,
+          'script-info'
+        );
+        break;
+      }
+    }
+  }
+
+  /**
+   * Inject icons in scene list page
+   */
+  private async injectSceneListIcons(): Promise<void> {
+    this.log('Injecting scene list icons');
+
+    const rows = document.querySelectorAll(
+      'ha-data-table tr[data-scene-id], ' +
+      'ha-data-table .mdc-data-table__row, ' +
+      '.scene-row'
     );
 
-    for (const button of dashboardButtons) {
-      const dashboardId = this.getDashboardIdFromURL();
-      if (dashboardId) {
+    for (const row of rows) {
+      const sceneId =
+        row.getAttribute('data-scene-id') ||
+        row.querySelector('[data-entity-id]')?.getAttribute('data-entity-id') ||
+        row.querySelector('.name, .title')?.textContent?.trim();
+
+      if (!sceneId) continue;
+
+      const nameCell = row.querySelector('.name, .title, mwc-list-item');
+      if (nameCell && !nameCell.querySelector('.homeguardian-icon-container')) {
         await this.injectIcon(
-          button,
+          nameCell,
+          'scene',
+          sceneId,
+          `scene-list-${sceneId}`
+        );
+      }
+    }
+  }
+
+  /**
+   * Inject icons in dashboard list
+   */
+  private async injectDashboardListIcons(): Promise<void> {
+    this.log('Injecting dashboard list icons');
+
+    const dashboardCards = document.querySelectorAll(
+      '.dashboard-card, [data-dashboard-id]'
+    );
+
+    for (const card of dashboardCards) {
+      const dashboardId =
+        card.getAttribute('data-dashboard-id') ||
+        card.querySelector('.name, .title')?.textContent?.trim();
+
+      if (!dashboardId) continue;
+
+      const nameElement = card.querySelector('.name, .title');
+      if (nameElement && !nameElement.querySelector('.homeguardian-icon-container')) {
+        await this.injectIcon(
+          nameElement,
           'dashboard',
           dashboardId,
-          'dashboard-icon'
+          `dashboard-list-${dashboardId}`
         );
       }
     }
@@ -482,25 +497,23 @@ export class IconInjector {
    * Extract entity IDs from URL
    */
   private getAutomationIdFromURL(): string | null {
+    // Match both /edit/ and /show/ or /info/ pages
     const match = window.location.pathname.match(
-      /\/config\/automation\/edit\/(.+)/
+      /\/config\/automation\/(?:edit|show|info)\/(.+)/
     );
     return match ? decodeURIComponent(match[1]) : null;
   }
 
   private getScriptIdFromURL(): string | null {
-    const match = window.location.pathname.match(/\/config\/script\/edit\/(.+)/);
+    const match = window.location.pathname.match(
+      /\/config\/script\/(?:edit|show|info)\/(.+)/
+    );
     return match ? decodeURIComponent(match[1]) : null;
   }
 
   private getSceneIdFromURL(): string | null {
-    const match = window.location.pathname.match(/\/config\/scene\/edit\/(.+)/);
-    return match ? decodeURIComponent(match[1]) : null;
-  }
-
-  private getBlueprintIdFromURL(): string | null {
     const match = window.location.pathname.match(
-      /\/config\/blueprint\/edit\/(.+)/
+      /\/config\/scene\/(?:edit|show|info)\/(.+)/
     );
     return match ? decodeURIComponent(match[1]) : null;
   }
