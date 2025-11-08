@@ -13,8 +13,9 @@ class HAParser {
 
   /**
    * Parse automations from automations.yaml or included files
+   * @param {boolean} includeRaw - Include raw YAML object (default: true for backward compatibility)
    */
-  async parseAutomations() {
+  async parseAutomations(includeRaw = true) {
     try {
       const items = [];
 
@@ -36,7 +37,7 @@ class HAParser {
               file: 'automations.yaml',
               index: index,
               enabled: automation.mode !== 'disabled',
-              raw: automation
+              ...(includeRaw && { raw: automation })
             });
           });
         }
@@ -72,7 +73,7 @@ class HAParser {
                       file: path.join(automationMatch[1].trim(), file),
                       index: index,
                       enabled: automation.mode !== 'disabled',
-                      raw: automation
+                      ...(includeRaw && { raw: automation })
                     });
                   });
                 } else if (automations) {
@@ -85,7 +86,7 @@ class HAParser {
                     file: path.join(automationMatch[1].trim(), file),
                     index: 0,
                     enabled: automations.mode !== 'disabled',
-                    raw: automations
+                    ...(includeRaw && { raw: automations })
                   });
                 }
               }
@@ -105,8 +106,9 @@ class HAParser {
 
   /**
    * Parse scripts from scripts.yaml or included files
+   * @param {boolean} includeRaw - Include raw YAML object (default: true for backward compatibility)
    */
-  async parseScripts() {
+  async parseScripts(includeRaw = true) {
     try {
       const items = [];
 
@@ -126,7 +128,7 @@ class HAParser {
               alias: script.alias || key,
               description: script.description || '',
               file: 'scripts.yaml',
-              raw: script
+              ...(includeRaw && { raw: script })
             });
           });
         }
@@ -341,70 +343,87 @@ class HAParser {
 
   /**
    * Parse all HA items
+   * @param {Object} options - Parsing options
+   * @param {boolean} options.includeRaw - Include raw YAML objects (default: false to save memory)
+   * @param {boolean} options.sequential - Parse sequentially to reduce memory spikes (default: true)
+   * @param {Array<string>} options.types - Only parse specific types (default: all)
    */
-  async parseAllItems() {
+  async parseAllItems(options = {}) {
     try {
-      const promises = [
-        this.parseAutomations(),
-        this.parseScripts(),
-        this.parseScenes()
-      ];
+      const {
+        includeRaw = false,  // Default to false to save memory
+        sequential = true,   // Default to true to reduce memory spikes
+        types = null
+      } = options;
 
-      // Add ESPHome parsing if enabled
-      if (this.parseESPHome) {
-        promises.push(this.parseESPHome());
-      }
-
-      // Add packages parsing if enabled
-      if (this.parsePackages) {
-        promises.push(this.parsePackages());
-      }
-
-      // Add Lovelace parsing if enabled
-      if (this.backupLovelace) {
-        promises.push(this.parseLovelaceDashboards());
-      }
-
-      const results = await Promise.all(promises);
-
-      const response = {
-        automations: results[0],
-        scripts: results[1],
-        scenes: results[2]
+      const parsers = {
+        automations: () => this.parseAutomations(includeRaw),
+        scripts: () => this.parseScripts(includeRaw),
+        scenes: () => this.parseScenes(includeRaw)
       };
 
-      let total = results[0].length + results[1].length + results[2].length;
-      let resultIndex = 3;
-
-      // Add ESPHome to response if enabled
+      // Add optional parsers if enabled
       if (this.parseESPHome) {
-        response.esphome = results[resultIndex];
-        total += results[resultIndex].length;
-        resultIndex++;
-      } else {
-        response.esphome = [];
+        parsers.esphome = () => this.parseESPHome(includeRaw);
       }
-
-      // Add packages to response if enabled
       if (this.parsePackages) {
-        response.packages = results[resultIndex];
-        total += results[resultIndex].length;
-        resultIndex++;
-      } else {
-        response.packages = [];
+        parsers.packages = () => this.parsePackages(includeRaw);
       }
-
-      // Add Lovelace to response if enabled
       if (this.backupLovelace) {
-        response.lovelace = results[resultIndex];
-        total += results[resultIndex].length;
-      } else {
-        response.lovelace = [];
+        parsers.lovelace = () => this.parseLovelaceDashboards(includeRaw);
       }
 
-      response.total = total;
+      // If specific types requested, filter parsers
+      if (types && Array.isArray(types)) {
+        const filteredParsers = {};
+        types.forEach(type => {
+          if (parsers[type]) {
+            filteredParsers[type] = parsers[type];
+          }
+        });
+        Object.keys(parsers).forEach(key => {
+          if (!filteredParsers[key]) {
+            delete parsers[key];
+          }
+        });
+      }
+
+      let results;
+      if (sequential) {
+        // Parse sequentially to reduce memory spike
+        results = {};
+        for (const [key, parser] of Object.entries(parsers)) {
+          results[key] = await parser();
+        }
+      } else {
+        // Parse in parallel (original behavior)
+        const promises = Object.values(parsers).map(p => p());
+        const resultArray = await Promise.all(promises);
+        results = {};
+        Object.keys(parsers).forEach((key, index) => {
+          results[key] = resultArray[index];
+        });
+      }
+
+      // Calculate total
+      let total = 0;
+      Object.values(results).forEach(arr => {
+        total += arr ? arr.length : 0;
+      });
+
+      // Ensure all expected keys exist
+      const response = {
+        automations: results.automations || [],
+        scripts: results.scripts || [],
+        scenes: results.scenes || [],
+        esphome: results.esphome || [],
+        packages: results.packages || [],
+        lovelace: results.lovelace || [],
+        total
+      };
 
       return response;
+
     } catch (error) {
       logger.error('Failed to parse all items:', error);
       throw error;

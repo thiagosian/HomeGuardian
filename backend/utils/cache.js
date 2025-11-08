@@ -1,11 +1,14 @@
 /**
- * Simple in-memory cache implementation
+ * Simple in-memory cache implementation with LRU eviction
  * For production, replace with Redis
  */
 class Cache {
-  constructor() {
+  constructor(maxSize = 100, maxMemoryMB = 50) {
     this.store = new Map();
     this.timestamps = new Map();
+    this.accessOrder = new Map(); // LRU tracking
+    this.maxSize = maxSize;
+    this.maxMemoryBytes = maxMemoryMB * 1024 * 1024;
   }
 
   /**
@@ -27,6 +30,10 @@ class Cache {
       return null;
     }
 
+    // Update LRU access time
+    this.accessOrder.delete(key);
+    this.accessOrder.set(key, now);
+
     return this.store.get(key);
   }
 
@@ -35,9 +42,33 @@ class Cache {
    * @param {string} key - Cache key
    * @param {any} value - Value to cache
    * @param {number} ttl - Time to live in milliseconds (default: 5 minutes)
+   * @returns {boolean} Success status
    */
   set(key, value, ttl = 300000) {
+    // Check value size to prevent caching huge objects
+    try {
+      const valueSize = Buffer.byteLength(JSON.stringify(value));
+      if (valueSize > 1024 * 1024) { // Don't cache values > 1MB
+        console.warn(`[Cache] Value too large to cache: ${key}, size: ${valueSize} bytes`);
+        return false;
+      }
+    } catch (err) {
+      // If value can't be stringified, don't cache it
+      console.warn(`[Cache] Cannot serialize value for key: ${key}`);
+      return false;
+    }
+
+    // LRU eviction if we've reached max size
+    if (this.store.size >= this.maxSize && !this.store.has(key)) {
+      // Remove the oldest accessed item (first in accessOrder Map)
+      const oldestKey = this.accessOrder.keys().next().value;
+      if (oldestKey) {
+        this.delete(oldestKey);
+      }
+    }
+
     this.store.set(key, value);
+    this.accessOrder.set(key, Date.now());
 
     if (ttl > 0) {
       const expiresAt = Date.now() + ttl;
@@ -54,6 +85,7 @@ class Cache {
   delete(key) {
     this.store.delete(key);
     this.timestamps.delete(key);
+    this.accessOrder.delete(key);
     return true;
   }
 
@@ -63,6 +95,7 @@ class Cache {
   clear() {
     this.store.clear();
     this.timestamps.clear();
+    this.accessOrder.clear();
     return true;
   }
 

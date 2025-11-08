@@ -31,4 +31,4 @@ mkdir -p /data
 # Start the application
 bashio::log.info "Configuration loaded, starting Node.js server..."
 cd /app/backend
-exec node server.js
+exec node --max-old-space-size=256 --optimize-for-size server.js

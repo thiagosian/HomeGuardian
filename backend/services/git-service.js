@@ -194,30 +194,84 @@ class GitService {
     }
   }
 
-  async getCommitDiff(commitHash) {
+  async getCommitDiff(commitHash, options = {}) {
     try {
+      const { maxLines = 5000, summary = false } = options;
+
+      if (summary) {
+        const diffSummary = await this.git.diffSummary([`${commitHash}^`, commitHash]);
+        return {
+          files: diffSummary.files,
+          insertions: diffSummary.insertions,
+          deletions: diffSummary.deletions,
+          changed: diffSummary.changed,
+          truncated: false
+        };
+      }
+
       const diff = await this.git.diff([`${commitHash}^`, commitHash]);
-      return diff;
+
+      // Truncate very large diffs to prevent memory issues
+      const lines = diff.split('\n');
+      if (lines.length > maxLines) {
+        logger.warn(`Large diff truncated: ${lines.length} lines -> ${maxLines} lines`);
+        return {
+          diff: lines.slice(0, maxLines).join('\n') +
+                `\n\n... (${lines.length - maxLines} more lines truncated, ${((lines.length - maxLines) / lines.length * 100).toFixed(1)}% hidden)`,
+          truncated: true,
+          totalLines: lines.length
+        };
+      }
+
+      return { diff, truncated: false, totalLines: lines.length };
     } catch (error) {
       logger.error('Failed to get commit diff:', error);
       throw error;
     }
   }
 
-  async getFileDiff(filePath, commitHash = 'HEAD') {
+  async getFileDiff(filePath, commitHash = 'HEAD', options = {}) {
     try {
+      const { maxLines = 5000 } = options;
       const diff = await this.git.diff([commitHash, '--', filePath]);
-      return diff;
+
+      // Truncate very large diffs
+      const lines = diff.split('\n');
+      if (lines.length > maxLines) {
+        logger.warn(`Large file diff truncated: ${lines.length} lines -> ${maxLines} lines`);
+        return {
+          diff: lines.slice(0, maxLines).join('\n') +
+                `\n\n... (${lines.length - maxLines} more lines truncated)`,
+          truncated: true,
+          totalLines: lines.length
+        };
+      }
+
+      return { diff, truncated: false, totalLines: lines.length };
     } catch (error) {
       logger.error('Failed to get file diff:', error);
       throw error;
     }
   }
 
-  async getFileContent(filePath, commitHash = 'HEAD') {
+  async getFileContent(filePath, commitHash = 'HEAD', options = {}) {
     try {
+      const { maxLines = 10000 } = options;
       const content = await this.git.show([`${commitHash}:${filePath}`]);
-      return content;
+
+      // Warn about very large files
+      const lines = content.split('\n');
+      if (lines.length > maxLines) {
+        logger.warn(`Large file content truncated: ${lines.length} lines -> ${maxLines} lines`);
+        return {
+          content: lines.slice(0, maxLines).join('\n') +
+                   `\n\n... (${lines.length - maxLines} more lines truncated)`,
+          truncated: true,
+          totalLines: lines.length
+        };
+      }
+
+      return { content, truncated: false, totalLines: lines.length };
     } catch (error) {
       logger.error('Failed to get file content:', error);
       throw error;

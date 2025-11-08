@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../utils/logger');
+const cache = require('../utils/cache');
 const HAParser = require('../services/ha-parser');
 const { validate } = require('../middleware/validate');
 const { historyQuerySchema, filePathQuerySchema } = require('../validation/schemas');
@@ -42,13 +43,16 @@ router.get('/:commitHash', async (req, res) => {
   try {
     const gitService = req.app.locals.gitService;
     const { commitHash } = req.params;
+    const { summary } = req.query;
 
-    const diff = await gitService.getCommitDiff(commitHash);
+    const result = await gitService.getCommitDiff(commitHash, {
+      summary: summary === 'true'
+    });
 
     res.json({
       success: true,
       commitHash,
-      diff
+      ...result
     });
   } catch (error) {
     logger.error('Failed to get commit details:', error);
@@ -69,13 +73,13 @@ router.get('/:commitHash/file', validate(filePathQuerySchema, 'query'), async (r
     // req.query is already validated
     const { filePath } = req.query;
 
-    const diff = await gitService.getFileDiff(filePath, commitHash);
+    const result = await gitService.getFileDiff(filePath, commitHash);
 
     res.json({
       success: true,
       commitHash,
       filePath,
-      diff
+      ...result
     });
   } catch (error) {
     logger.error('Failed to get file diff:', error);
@@ -96,13 +100,13 @@ router.get('/:commitHash/content', validate(filePathQuerySchema, 'query'), async
     // req.query is already validated
     const { filePath } = req.query;
 
-    const content = await gitService.getFileContent(filePath, commitHash);
+    const result = await gitService.getFileContent(filePath, commitHash);
 
     res.json({
       success: true,
       commitHash,
       filePath,
-      content
+      ...result
     });
   } catch (error) {
     logger.error('Failed to get file content:', error);
@@ -115,10 +119,29 @@ router.get('/:commitHash/content', validate(filePathQuerySchema, 'query'), async
 
 /**
  * Get all HA items (automations, scripts, scenes)
+ * Query params:
+ *  - includeRaw: true/false (default: false to save memory)
+ *  - types: comma-separated list of types to parse
  */
 router.get('/items/all', async (req, res) => {
   try {
-    const items = await haParser.parseAllItems();
+    const { types, includeRaw } = req.query;
+
+    // Create cache key based on options
+    const cacheKey = `ha_items_${types || 'all'}_${includeRaw || 'false'}`;
+    let items = cache.get(cacheKey);
+
+    if (!items) {
+      logger.info('Parsing all HA items (cache miss)');
+      items = await haParser.parseAllItems({
+        includeRaw: includeRaw === 'true',
+        types: types ? types.split(',') : null,
+        sequential: true // Parse sequentially to reduce memory spike
+      });
+      cache.set(cacheKey, items, 300000); // 5 min TTL
+    } else {
+      logger.debug('Returning cached HA items');
+    }
 
     res.json({
       success: true,
