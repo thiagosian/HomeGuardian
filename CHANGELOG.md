@@ -1,3 +1,10 @@
+## [8.0.0](https://github.com/thiagosian/HomeGuardian/compare/v7.0.0...v8.0.0) (2025-11-12)
+
+
+### Bug Fixes
+
+* resolve parseBlueprints error and improve UX ([9a51a19](https://github.com/thiagosian/HomeGuardian/commit/9a51a1915f308cec423508fa41008e80bb00a363))
+
 ## [7.0.0](https://github.com/thiagosian/HomeGuardian/compare/v6.0.0...v7.0.0) (2025-11-12)
 
 
