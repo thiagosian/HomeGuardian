@@ -1,3 +1,10 @@
+## [6.0.0](https://github.com/thiagosian/HomeGuardian/compare/v5.0.0...v6.0.0) (2025-11-12)
+
+
+### Bug Fixes
+
+* add missing backend directories to Dockerfile ([34809f1](https://github.com/thiagosian/HomeGuardian/commit/34809f1095377fd949f5b6168511525e8aac9ac8))
+
 ## [5.0.0](https://github.com/thiagosian/HomeGuardian/compare/v4.0.0...v5.0.0) (2025-11-12)
 
 

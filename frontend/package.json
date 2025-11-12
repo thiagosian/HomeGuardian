@@ -1,6 +1,6 @@
 {
   "name": "homeguardian-frontend",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "description": "HomeGuardian frontend application",
   "type": "module",
   "scripts": {
