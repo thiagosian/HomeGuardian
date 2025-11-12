@@ -34,6 +34,7 @@ const gitRoutes = require('./routes/git');
 const GitService = require('./services/git-service');
 const FileWatcher = require('./services/file-watcher');
 const Scheduler = require('./services/scheduler');
+const { HeapMonitor, PressureLevel } = require('./utils/heap-monitor');
 
 const app = express();
 const PORT = process.env.PORT || 8099;
@@ -203,6 +204,60 @@ async function initializeServices() {
       logger.info('Scheduler disabled by configuration');
     }
 
+    // Initialize HeapMonitor
+    logger.info('Initializing heap monitor...');
+    const heapMonitor = new HeapMonitor({
+      monitorInterval: parseInt(process.env.HEAP_MONITOR_INTERVAL || '30000'), // 30s default
+      warningThreshold: parseFloat(process.env.HEAP_WARNING_THRESHOLD || '0.70'), // 70%
+      criticalThreshold: parseFloat(process.env.HEAP_CRITICAL_THRESHOLD || '0.85'), // 85%
+      emergencyThreshold: parseFloat(process.env.HEAP_EMERGENCY_THRESHOLD || '0.95'), // 95%
+      forceGcOnCritical: process.env.HEAP_GC_ON_CRITICAL !== 'false', // true by default
+      forceGcOnEmergency: process.env.HEAP_GC_ON_EMERGENCY !== 'false' // true by default
+    });
+
+    // Register pressure level callbacks
+    heapMonitor.onPressureLevel(PressureLevel.WARNING, ({ level, snapshot }) => {
+      logger.warn('[HeapMonitor] Memory pressure: WARNING', {
+        heapUsed: heapMonitor.formatBytes(snapshot.heapUsed),
+        heapLimit: heapMonitor.formatBytes(snapshot.heapLimit),
+        usageRatio: `${(snapshot.heapUsageRatio * 100).toFixed(2)}%`
+      });
+    });
+
+    heapMonitor.onPressureLevel(PressureLevel.CRITICAL, ({ level, snapshot }) => {
+      logger.error('[HeapMonitor] Memory pressure: CRITICAL', {
+        heapUsed: heapMonitor.formatBytes(snapshot.heapUsed),
+        heapLimit: heapMonitor.formatBytes(snapshot.heapLimit),
+        usageRatio: `${(snapshot.heapUsageRatio * 100).toFixed(2)}%`
+      });
+    });
+
+    heapMonitor.onPressureLevel(PressureLevel.EMERGENCY, ({ level, snapshot }) => {
+      logger.error('[HeapMonitor] Memory pressure: EMERGENCY - Process may crash soon!', {
+        heapUsed: heapMonitor.formatBytes(snapshot.heapUsed),
+        heapLimit: heapMonitor.formatBytes(snapshot.heapLimit),
+        usageRatio: `${(snapshot.heapUsageRatio * 100).toFixed(2)}%`
+      });
+    });
+
+    heapMonitor.onLeakDetected((leakInfo) => {
+      logger.error('[HeapMonitor] Potential memory leak detected!', {
+        growthRate: `${(leakInfo.growthRate * 100).toFixed(2)}%`,
+        avgHeap: heapMonitor.formatBytes(leakInfo.avgHeap),
+        rSquared: leakInfo.rSquared.toFixed(3)
+      });
+    });
+
+    // Register heapMonitor in container
+    container.register('heapMonitor', heapMonitor, {
+      description: 'Proactive heap memory monitor',
+      required: false
+    });
+
+    // Start monitoring
+    heapMonitor.start();
+    logger.info('Heap monitor started');
+
     // Validate all required services are initialized
     container.validateServices();
 
@@ -213,6 +268,7 @@ async function initializeServices() {
     app.locals.gitService = gitService;
     app.locals.fileWatcher = fileWatcher;
     app.locals.scheduler = scheduler;
+    app.locals.heapMonitor = heapMonitor;
 
     logger.info('All services initialized successfully');
     logger.info(`Registered services: ${container.getServiceNames().join(', ')}`);
@@ -262,12 +318,20 @@ process.on('uncaughtException', (error) => {
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM signal received: closing server');
 
+  if (app.locals.heapMonitor) {
+    app.locals.heapMonitor.shutdown();
+  }
+
   if (app.locals.fileWatcher) {
     await app.locals.fileWatcher.stop();
   }
 
   if (app.locals.scheduler) {
     app.locals.scheduler.stop();
+  }
+
+  if (app.locals.gitService) {
+    await app.locals.gitService.shutdown({ timeout: 10000 });
   }
 
   process.exit(0);
@@ -276,12 +340,20 @@ process.on('SIGTERM', async () => {
 process.on('SIGINT', async () => {
   logger.info('SIGINT signal received: closing server');
 
+  if (app.locals.heapMonitor) {
+    app.locals.heapMonitor.shutdown();
+  }
+
   if (app.locals.fileWatcher) {
     await app.locals.fileWatcher.stop();
   }
 
   if (app.locals.scheduler) {
     app.locals.scheduler.stop();
+  }
+
+  if (app.locals.gitService) {
+    await app.locals.gitService.shutdown({ timeout: 10000 });
   }
 
   process.exit(0);

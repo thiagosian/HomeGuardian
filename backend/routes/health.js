@@ -166,4 +166,110 @@ router.get('/metrics', (req, res) => {
   res.send(metrics);
 });
 
+/**
+ * Heap Monitor Metrics
+ * GET /api/health/heap
+ */
+router.get('/heap', (req, res) => {
+  try {
+    const heapMonitor = req.app.locals.heapMonitor;
+
+    if (!heapMonitor) {
+      return res.status(503).json({
+        error: 'HeapMonitor not initialized',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const metrics = heapMonitor.getMetrics();
+    const history = heapMonitor.getHistory(20);
+
+    res.status(200).json({
+      metrics,
+      history,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Failed to get heap metrics:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve heap metrics',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * Git Lock Manager Metrics
+ * GET /api/health/git-locks
+ */
+router.get('/git-locks', (req, res) => {
+  try {
+    const gitService = req.app.locals.gitService;
+
+    if (!gitService) {
+      return res.status(503).json({
+        error: 'GitService not initialized',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const metrics = gitService.getLockMetrics();
+    const queueStatus = gitService.getLockQueueStatus();
+
+    res.status(200).json({
+      metrics,
+      queue: queueStatus,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Failed to get git lock metrics:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve git lock metrics',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * Combined monitoring dashboard
+ * GET /api/health/dashboard
+ */
+router.get('/dashboard', async (req, res) => {
+  try {
+    const heapMonitor = req.app.locals.heapMonitor;
+    const gitService = req.app.locals.gitService;
+    const memUsage = process.memoryUsage();
+
+    const dashboard = {
+      timestamp: new Date().toISOString(),
+      uptime: Math.floor(process.uptime()),
+      process: {
+        pid: process.pid,
+        version: process.version,
+        platform: process.platform,
+        arch: process.arch
+      },
+      memory: {
+        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) + 'MB',
+        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024) + 'MB',
+        rss: Math.round(memUsage.rss / 1024 / 1024) + 'MB',
+        external: Math.round(memUsage.external / 1024 / 1024) + 'MB'
+      },
+      heapMonitor: heapMonitor ? heapMonitor.getMetrics() : null,
+      gitLocks: gitService ? gitService.getLockMetrics() : null
+    };
+
+    res.status(200).json(dashboard);
+  } catch (error) {
+    logger.error('Failed to get dashboard:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve dashboard',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 module.exports = router;
