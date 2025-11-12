@@ -5,6 +5,8 @@ const compression = require('compression');
 const logger = require('./utils/logger');
 const db = require('./config/database');
 const encryptionKeyManager = require('./utils/encryption-key-manager');
+const container = require('./core/service-container');
+const { serviceInjector } = require('./middleware/service-injector');
 const {
   backupLimiter,
   restoreLimiter,
@@ -84,6 +86,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Inject service container into requests
+app.use(serviceInjector(container));
+
 // Apply rate limiters to API endpoints
 app.use('/api/backup', backupLimiter);
 app.use('/api/restore', restoreLimiter);
@@ -144,19 +149,36 @@ async function initializeServices() {
     logger.info('Initializing encryption key...');
     await encryptionKeyManager.initialize();
 
+    // Register encryption key manager in container
+    container.register('encryptionKeyManager', encryptionKeyManager, {
+      description: 'AES-256 encryption key manager'
+    });
+
     logger.info('Initializing database...');
     await db.initialize();
+
+    // Register database in container
+    container.register('db', db, {
+      description: 'SQLite database connection'
+    });
 
     logger.info('Initializing Git service...');
     const gitService = new GitService();
     await gitService.initialize();
 
-    // Store gitService instance globally for access in routes
-    app.locals.gitService = gitService;
+    // Register gitService in container instead of app.locals
+    container.register('gitService', gitService, {
+      description: 'Git repository management service'
+    });
 
     logger.info('Initializing file watcher...');
     const fileWatcher = new FileWatcher(gitService);
-    app.locals.fileWatcher = fileWatcher;
+
+    // Register fileWatcher in container
+    container.register('fileWatcher', fileWatcher, {
+      description: 'File system watcher for auto-commits',
+      required: false
+    });
 
     if (process.env.AUTO_COMMIT_ENABLED === 'true') {
       await fileWatcher.start();
@@ -167,7 +189,12 @@ async function initializeServices() {
 
     logger.info('Initializing scheduler...');
     const scheduler = new Scheduler(gitService, db);
-    app.locals.scheduler = scheduler;
+
+    // Register scheduler in container
+    container.register('scheduler', scheduler, {
+      description: 'Scheduled backup service',
+      required: false
+    });
 
     if (process.env.SCHEDULED_BACKUP_ENABLED === 'true') {
       scheduler.start();
@@ -176,7 +203,19 @@ async function initializeServices() {
       logger.info('Scheduler disabled by configuration');
     }
 
+    // Validate all required services are initialized
+    container.validateServices();
+
+    // Attach container to app.locals for backward compatibility
+    app.locals.container = container;
+
+    // Keep legacy access for gradual migration (deprecated)
+    app.locals.gitService = gitService;
+    app.locals.fileWatcher = fileWatcher;
+    app.locals.scheduler = scheduler;
+
     logger.info('All services initialized successfully');
+    logger.info(`Registered services: ${container.getServiceNames().join(', ')}`);
   } catch (error) {
     logger.error('Failed to initialize services:', error);
     process.exit(1);

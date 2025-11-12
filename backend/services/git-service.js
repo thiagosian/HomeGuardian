@@ -97,18 +97,68 @@ class GitService {
     }
 
     try {
+      // Validate config path exists and is writable
+      try {
+        await fs.access(this.configPath, fs.constants.W_OK);
+      } catch (accessError) {
+        const detailedError = new Error(
+          `.gitignore creation failed: Config path '${this.configPath}' is not writable. ` +
+          `Error: ${accessError.code || accessError.message}`
+        );
+        logger.error(detailedError);
+        throw detailedError;
+      }
+
       // Check if .gitignore already exists
       const exists = await fs.access(gitignorePath).then(() => true).catch(() => false);
 
       if (!exists) {
-        await fs.writeFile(gitignorePath, defaultIgnores.join('\n'));
-        logger.info('.gitignore created');
+        const content = defaultIgnores.join('\n');
+
+        // Write file with proper permissions
+        await fs.writeFile(gitignorePath, content, {
+          encoding: 'utf8',
+          mode: 0o644
+        });
+
+        // Verify the write was successful
+        try {
+          const written = await fs.readFile(gitignorePath, 'utf8');
+          if (written !== content) {
+            throw new Error('.gitignore content verification failed - content mismatch');
+          }
+
+          // Verify file stats
+          const stats = await fs.stat(gitignorePath);
+          if (stats.size === 0) {
+            throw new Error('.gitignore was created but is empty');
+          }
+
+          logger.info(`.gitignore created successfully (${stats.size} bytes, ${defaultIgnores.length} rules)`);
+        } catch (verifyError) {
+          // Try to clean up partial file
+          await fs.unlink(gitignorePath).catch(() => {});
+          throw new Error(`.gitignore write verification failed: ${verifyError.message}`);
+        }
       } else {
-        logger.info('.gitignore already exists');
+        logger.info('.gitignore already exists, skipping creation');
+
+        // Log existing file info for transparency
+        try {
+          const stats = await fs.stat(gitignorePath);
+          logger.debug(`.gitignore exists: ${stats.size} bytes, modified ${stats.mtime.toISOString()}`);
+        } catch (statError) {
+          logger.warn('Could not read .gitignore stats:', statError.message);
+        }
       }
     } catch (error) {
-      logger.error('Failed to create .gitignore:', error);
-      throw error;
+      const detailedError = new Error(
+        `.gitignore creation failed: ${error.message}. ` +
+        `Path: ${gitignorePath}, ` +
+        `Config Path Writable: ${await fs.access(this.configPath, fs.constants.W_OK).then(() => 'yes').catch(() => 'no')}`
+      );
+      logger.error(detailedError);
+      throw detailedError;
     }
   }
 
@@ -314,18 +364,38 @@ class GitService {
 
   async configureRemote(remoteUrl, remoteName = 'origin') {
     try {
+      // Sanitize inputs to prevent command injection
+      // Note: simple-git uses array-based API which is safer than shell commands
+      // but we add extra validation for defense in depth
+
+      // Validate remote name (alphanumeric, underscore, hyphen only)
+      if (!/^[a-zA-Z0-9_\-]+$/.test(remoteName)) {
+        throw new Error('Invalid remote name. Only alphanumeric characters, underscores, and hyphens are allowed.');
+      }
+
+      // Validate URL format (should have been validated by Zod already, but double-check)
+      if (!remoteUrl || typeof remoteUrl !== 'string') {
+        throw new Error('Invalid remote URL: must be a non-empty string');
+      }
+
+      // Extra security: check for dangerous characters
+      const dangerousChars = /[;&|`$(){}[\]<>'"\\]/;
+      if (dangerousChars.test(remoteUrl) || dangerousChars.test(remoteName)) {
+        throw new Error('Remote URL or name contains forbidden characters');
+      }
+
       // Check if remote exists
       const remotes = await this.git.getRemotes();
       const existingRemote = remotes.find(r => r.name === remoteName);
 
       if (existingRemote) {
-        // Update remote URL
+        // Update remote URL using array-based API (safe from shell injection)
         await this.git.remote(['set-url', remoteName, remoteUrl]);
-        logger.info(`Remote '${remoteName}' updated`);
+        logger.info(`Remote '${remoteName}' updated to ${remoteUrl.replace(/:[^@]*@/, ':***@')}`); // Mask credentials in logs
       } else {
-        // Add new remote
+        // Add new remote using array-based API (safe from shell injection)
         await this.git.addRemote(remoteName, remoteUrl);
-        logger.info(`Remote '${remoteName}' added`);
+        logger.info(`Remote '${remoteName}' added with URL ${remoteUrl.replace(/:[^@]*@/, ':***@')}`); // Mask credentials in logs
       }
 
       // Save to database
