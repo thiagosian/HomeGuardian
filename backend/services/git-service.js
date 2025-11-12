@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const logger = require('../utils/logger');
 const db = require('../config/database');
+const GitLockManager = require('../utils/git-lock-manager');
 
 class GitService {
   constructor() {
@@ -14,6 +15,16 @@ class GitService {
     // Git user configuration from environment
     this.gitUserName = process.env.GIT_USER_NAME || 'HomeGuardian';
     this.gitUserEmail = process.env.GIT_USER_EMAIL || 'homeguardian@homeassistant.local';
+
+    // Initialize GitLockManager
+    this.lockManager = new GitLockManager(this.configPath, {
+      timeout: parseInt(process.env.GIT_LOCK_TIMEOUT || '5000'),
+      maxRetries: parseInt(process.env.GIT_LOCK_MAX_RETRIES || '3'),
+      orphanLockAge: parseInt(process.env.GIT_LOCK_ORPHAN_AGE || '300000'),
+      operationTimeout: parseInt(process.env.GIT_OPERATION_TIMEOUT || '30000')
+    });
+
+    logger.info('[GitService] Initialized with GitLockManager');
   }
 
   async initialize() {
@@ -23,11 +34,14 @@ class GitService {
 
       if (!isRepo) {
         logger.info('Git repository not found. Initializing...');
-        await this.git.init();
 
-        // Configure git user
-        await this.git.addConfig('user.name', this.gitUserName);
-        await this.git.addConfig('user.email', this.gitUserEmail);
+        await this.lockManager.executeOperation(async () => {
+          await this.git.init();
+
+          // Configure git user
+          await this.git.addConfig('user.name', this.gitUserName);
+          await this.git.addConfig('user.email', this.gitUserEmail);
+        }, { name: 'git-init' });
 
         // Create .gitignore if it doesn't exist or if exclude_secrets is enabled
         await this.createGitignore();
@@ -40,8 +54,10 @@ class GitService {
         logger.info('Git repository already exists');
 
         // Ensure git config is set
-        await this.git.addConfig('user.name', this.gitUserName);
-        await this.git.addConfig('user.email', this.gitUserEmail);
+        await this.lockManager.executeOperation(async () => {
+          await this.git.addConfig('user.name', this.gitUserName);
+          await this.git.addConfig('user.email', this.gitUserEmail);
+        }, { name: 'git-config' });
       }
 
       return true;
@@ -164,8 +180,11 @@ class GitService {
 
   async createInitialCommit() {
     try {
-      await this.git.add('.gitignore');
-      await this.git.commit('Initial commit by HomeGuardian');
+      await this.lockManager.executeOperation(async () => {
+        await this.git.add('.gitignore');
+        await this.git.commit('Initial commit by HomeGuardian');
+      }, { name: 'git-initial-commit', priority: 1 });
+
       logger.info('Initial commit created');
 
       // Record in database
@@ -184,16 +203,23 @@ class GitService {
 
   async createCommit(message, isAuto = true, isScheduled = false) {
     try {
-      // Check if there are changes
+      // Check if there are changes (outside lock for performance)
       const status = await this.git.status();
 
       if (!status.isClean()) {
-        // Stage all changes
-        await this.git.add('.');
-
-        // Create commit
         const commitMessage = message || `Auto-save: ${new Date().toISOString()}`;
-        await this.git.commit(commitMessage);
+
+        // Execute commit operations with lock management
+        await this.lockManager.executeOperation(async () => {
+          // Stage all changes
+          await this.git.add('.');
+
+          // Create commit
+          await this.git.commit(commitMessage);
+        }, {
+          name: isScheduled ? 'git-scheduled-commit' : (isAuto ? 'git-auto-commit' : 'git-manual-commit'),
+          priority: isAuto ? 0 : 1 // Manual commits have higher priority
+        });
 
         const log = await this.git.log({ maxCount: 1 });
 
@@ -333,8 +359,10 @@ class GitService {
       // Create safety backup first
       await this.createCommit('Safety backup before restoration', false, false);
 
-      // Restore file
-      await this.git.checkout([commitHash, '--', filePath]);
+      // Restore file with lock management
+      await this.lockManager.executeOperation(async () => {
+        await this.git.checkout([commitHash, '--', filePath]);
+      }, { name: 'git-restore-file', priority: 1 });
 
       logger.info(`File restored: ${filePath} from ${commitHash}`);
 
@@ -388,15 +416,17 @@ class GitService {
       const remotes = await this.git.getRemotes();
       const existingRemote = remotes.find(r => r.name === remoteName);
 
-      if (existingRemote) {
-        // Update remote URL using array-based API (safe from shell injection)
-        await this.git.remote(['set-url', remoteName, remoteUrl]);
-        logger.info(`Remote '${remoteName}' updated to ${remoteUrl.replace(/:[^@]*@/, ':***@')}`); // Mask credentials in logs
-      } else {
-        // Add new remote using array-based API (safe from shell injection)
-        await this.git.addRemote(remoteName, remoteUrl);
-        logger.info(`Remote '${remoteName}' added with URL ${remoteUrl.replace(/:[^@]*@/, ':***@')}`); // Mask credentials in logs
-      }
+      await this.lockManager.executeOperation(async () => {
+        if (existingRemote) {
+          // Update remote URL using array-based API (safe from shell injection)
+          await this.git.remote(['set-url', remoteName, remoteUrl]);
+          logger.info(`Remote '${remoteName}' updated to ${remoteUrl.replace(/:[^@]*@/, ':***@')}`); // Mask credentials in logs
+        } else {
+          // Add new remote using array-based API (safe from shell injection)
+          await this.git.addRemote(remoteName, remoteUrl);
+          logger.info(`Remote '${remoteName}' added with URL ${remoteUrl.replace(/:[^@]*@/, ':***@')}`); // Mask credentials in logs
+        }
+      }, { name: 'git-configure-remote', priority: 1 });
 
       // Save to database
       await db.run(
@@ -419,8 +449,10 @@ class GitService {
       const status = await this.git.status();
       const currentBranch = status.current;
 
-      // Push to remote
-      await this.git.push(remoteName, currentBranch || branch, ['--set-upstream']);
+      // Push to remote with lock management
+      await this.lockManager.executeOperation(async () => {
+        await this.git.push(remoteName, currentBranch || branch, ['--set-upstream']);
+      }, { name: 'git-push', priority: 2 }); // Higher priority for push operations
 
       logger.info('Push successful');
 
@@ -452,6 +484,29 @@ class GitService {
       logger.error('Remote connection test failed:', error);
       return false;
     }
+  }
+
+  /**
+   * Get GitLockManager metrics
+   */
+  getLockMetrics() {
+    return this.lockManager.getMetrics();
+  }
+
+  /**
+   * Get GitLockManager queue status
+   */
+  getLockQueueStatus() {
+    return this.lockManager.getQueueStatus();
+  }
+
+  /**
+   * Graceful shutdown
+   */
+  async shutdown(options = {}) {
+    logger.info('[GitService] Shutting down...');
+    await this.lockManager.shutdown(options);
+    logger.info('[GitService] Shutdown complete');
   }
 }
 
