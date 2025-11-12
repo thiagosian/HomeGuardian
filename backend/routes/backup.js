@@ -10,7 +10,8 @@ const { createBackupSchema } = require('../validation/schemas');
  * Trigger manual backup (create commit)
  */
 router.post('/now', authenticate, validate(createBackupSchema), asyncHandler(async (req, res) => {
-  const gitService = req.app.locals.gitService;
+  // Use service container for safer service access
+  const gitService = req.services.get('gitService');
   const { message } = req.body;
 
   const customMessage = message || `Manual backup: ${new Date().toISOString()}`;
@@ -44,7 +45,7 @@ router.post('/now', authenticate, validate(createBackupSchema), asyncHandler(asy
  * Get current git status
  */
 router.get('/status', authenticate, asyncHandler(async (req, res) => {
-  const gitService = req.app.locals.gitService;
+  const gitService = req.services.get('gitService');
   const status = await gitService.getStatus();
 
   res.json({
@@ -57,7 +58,7 @@ router.get('/status', authenticate, asyncHandler(async (req, res) => {
  * Pause file watcher
  */
 router.post('/watcher/pause', authenticate, asyncHandler(async (req, res) => {
-  const fileWatcher = req.app.locals.fileWatcher;
+  const fileWatcher = req.services.get('fileWatcher');
   await fileWatcher.pause();
 
   res.json({
@@ -70,7 +71,7 @@ router.post('/watcher/pause', authenticate, asyncHandler(async (req, res) => {
  * Resume file watcher
  */
 router.post('/watcher/resume', authenticate, asyncHandler(async (req, res) => {
-  const fileWatcher = req.app.locals.fileWatcher;
+  const fileWatcher = req.services.get('fileWatcher');
   await fileWatcher.resume();
 
   res.json({
@@ -83,7 +84,7 @@ router.post('/watcher/resume', authenticate, asyncHandler(async (req, res) => {
  * Get file watcher status
  */
 router.get('/watcher/status', authenticate, asyncHandler(async (req, res) => {
-  const fileWatcher = req.app.locals.fileWatcher;
+  const fileWatcher = req.services.get('fileWatcher');
   const status = fileWatcher.getStatus();
 
   res.json({

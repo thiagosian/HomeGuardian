@@ -5,10 +5,11 @@
 
 import { IconInjector } from './icon-injector';
 import { getApiClient } from './api-client';
+import { VERSION } from './config';
 import './history-popup';
 
 console.log(
-  '%c HomeGuardian UI %c v1.0.0 ',
+  `%c HomeGuardian UI %c v${VERSION} `,
   'background: #4CAF50; color: white; font-weight: bold;',
   'background: #333; color: white;'
 );
@@ -47,7 +48,7 @@ async function initialize(): Promise<void> {
   (window as any).homeGuardianUI = {
     injector,
     apiClient,
-    version: '1.0.0',
+    version: VERSION,
     enableDebug: () => {
       localStorage.setItem('homeguardian_debug', 'true');
       console.log('[HomeGuardian UI] Debug logging enabled');

@@ -10,6 +10,8 @@ class EncryptionKeyManager {
       '.encryption_key'
     );
     this.key = null;
+    // Promise-based lock for key rotation
+    this.rotationLock = Promise.resolve();
   }
 
   /**
@@ -152,18 +154,37 @@ class EncryptionKeyManager {
   }
 
   /**
+   * Acquire rotation lock
+   * @returns {Promise<Function>} Release function
+   * @private
+   */
+  async acquireLock() {
+    let releaseFn;
+    const newLock = new Promise(resolve => {
+      releaseFn = resolve;
+    });
+
+    const previousLock = this.rotationLock;
+    this.rotationLock = newLock;
+
+    await previousLock;
+    return releaseFn;
+  }
+
+  /**
    * Rotate encryption key and re-encrypt all data
+   * Uses promise-based locking to prevent concurrent rotations
    * @returns {Promise<Object>} Migration statistics
    */
   async rotateKey() {
     const db = require('../config/database');
     const cryptoManager = require('./crypto-manager');
 
-    if (this.rotationInProgress) {
-      throw new Error('Key rotation already in progress');
-    }
+    // Acquire lock (will wait if another rotation is in progress)
+    const release = await this.acquireLock();
+    logger.info('Rotation lock acquired');
 
-    this.rotationInProgress = true;
+    // Store old key for potential rollback
     const oldKey = this.key;
     const newKey = crypto.randomBytes(32).toString('hex');
 
@@ -292,7 +313,9 @@ class EncryptionKeyManager {
       this.key = oldKey;
       throw error;
     } finally {
-      this.rotationInProgress = false;
+      // Release lock to allow next rotation
+      release();
+      logger.info('Rotation lock released');
     }
   }
 

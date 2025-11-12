@@ -2,9 +2,40 @@ const { z } = require('zod');
 
 // Common patterns
 const hexString = z.string().regex(/^[0-9a-f]+$/i, 'Must be hexadecimal');
-const gitUrl = z.string().url().or(
-  z.string().regex(/^git@[\w\.-]+:[\w\.-]+\/[\w\.-]+\.git$/, 'Invalid Git URL')
-);
+
+// Git URL validation with security hardening
+// Supports both HTTPS and SSH formats
+// Prevents command injection by restricting allowed characters
+const gitUrl = z.string()
+  .min(1, 'Git URL cannot be empty')
+  .max(500, 'Git URL too long')
+  .refine(
+    (url) => {
+      // HTTPS URLs (GitHub, GitLab, Bitbucket, etc.)
+      const httpsPattern = /^https:\/\/[a-zA-Z0-9][a-zA-Z0-9\-\.]*[a-zA-Z0-9](?::[0-9]{1,5})?\/[a-zA-Z0-9_\-\/\.]+\.git$/;
+
+      // SSH URLs (git@github.com:user/repo.git)
+      const sshPattern = /^git@[a-zA-Z0-9][a-zA-Z0-9\-\.]*[a-zA-Z0-9]:[a-zA-Z0-9_\-\/]+\/[a-zA-Z0-9_\-\.]+\.git$/;
+
+      return httpsPattern.test(url) || sshPattern.test(url);
+    },
+    { message: 'Invalid Git URL format. Must be HTTPS (https://...) or SSH (git@...)' }
+  )
+  .refine(
+    (url) => {
+      // Forbidden characters that could be used for command injection
+      const dangerousChars = /[;&|`$(){}[\]<>'"\\]/;
+      return !dangerousChars.test(url);
+    },
+    { message: 'Git URL contains forbidden characters' }
+  )
+  .refine(
+    (url) => {
+      // Prevent path traversal attempts
+      return !url.includes('..');
+    },
+    { message: 'Git URL contains invalid path patterns' }
+  );
 
 // Settings schemas
 const settingKeySchema = z.string()

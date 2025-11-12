@@ -128,3 +128,9 @@ export const DEBUG_CONFIG = {
   storageKey: 'homeguardian_debug',
   logPrefix: '[HomeGuardian UI]',
 } as const;
+
+/**
+ * Application version
+ * Automatically injected during build from package.json
+ */
+export const VERSION = '__VERSION__' as const;
