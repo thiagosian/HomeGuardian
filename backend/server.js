@@ -39,6 +39,29 @@ const { HeapMonitor, PressureLevel } = require('./utils/heap-monitor');
 const app = express();
 const PORT = process.env.PORT || 8099;
 
+// Trust proxy configuration
+// When running behind a reverse proxy (nginx, docker networking, etc.)
+// we need to trust the proxy to correctly identify client IPs via X-Forwarded-For
+// Default: trust the first hop (loopback, linklocal, uniquelocal)
+// Can be customized via TRUST_PROXY env var:
+//   'true' = trust all proxies (NOT recommended in production)
+//   'false' = trust no proxies
+//   number = trust the first N hops
+//   string = trust specific IP/CIDR ranges
+const trustProxy = process.env.TRUST_PROXY;
+if (trustProxy === 'true') {
+  app.set('trust proxy', true);
+} else if (trustProxy === 'false') {
+  app.set('trust proxy', false);
+} else if (trustProxy && !isNaN(trustProxy)) {
+  app.set('trust proxy', parseInt(trustProxy));
+} else if (trustProxy) {
+  app.set('trust proxy', trustProxy);
+} else {
+  // Default: trust first hop (recommended for Docker/container environments)
+  app.set('trust proxy', 1);
+}
+
 // Middleware
 app.use(cors());
 
