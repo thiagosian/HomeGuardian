@@ -1,4 +1,5 @@
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const logger = require('../utils/logger');
 
 /**
@@ -97,7 +98,9 @@ const gitHistoryLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req) => {
     // Rate limit per IP + entity type for fairness
-    return `${req.ip}:${req.params.type || req.query.type || 'all'}`;
+    // Use ipKeyGenerator to properly handle IPv6 addresses
+    const normalizedIp = ipKeyGenerator(req);
+    return `${normalizedIp}:${req.params.type || req.query.type || 'all'}`;
   }
 });
 
@@ -130,7 +133,9 @@ const entityHistoryLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req) => {
     // Rate limit per IP + entity to prevent hammering specific entities
-    return `${req.ip}:${req.params.type}:${req.params.id}`;
+    // Use ipKeyGenerator to properly handle IPv6 addresses
+    const normalizedIp = ipKeyGenerator(req);
+    return `${normalizedIp}:${req.params.type}:${req.params.id}`;
   }
 });
 
@@ -146,7 +151,8 @@ const batchLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req) => {
     // Stricter per-IP limit for batch operations
-    return req.ip;
+    // Use ipKeyGenerator to properly handle IPv6 addresses
+    return ipKeyGenerator(req);
   }
 });
 
