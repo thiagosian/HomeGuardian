@@ -1,3 +1,10 @@
+## [7.0.0](https://github.com/thiagosian/HomeGuardian/compare/v6.0.0...v7.0.0) (2025-11-12)
+
+
+### Bug Fixes
+
+* resolve rate-limit IPv6 and trust proxy configuration issues ([c9905df](https://github.com/thiagosian/HomeGuardian/commit/c9905df6daa49054e07e61c6a3b0b11034bdbe83))
+
 ## [6.0.0](https://github.com/thiagosian/HomeGuardian/compare/v5.0.0...v6.0.0) (2025-11-12)
 
 
