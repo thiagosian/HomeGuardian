@@ -61,13 +61,17 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.title')}</h1>
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{t('dashboard.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">Monitor your Home Assistant backups</p>
+        </div>
         <Button
           onClick={handleBackupNow}
           disabled={backing}
           size="lg"
+          className="shadow-sm"
         >
           {backing ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -79,88 +83,109 @@ export default function Dashboard() {
       </div>
 
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="animate-in fade-in-0 slide-in-from-top-2">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-2">
         {/* Git Status */}
-        <Card>
+        <Card className="group">
           <CardHeader>
-            <CardTitle>{t('dashboard.gitStatus')}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              {status?.git?.isClean ? (
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-amber-500" />
+              )}
+              {t('dashboard.gitStatus')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center mt-2">
-              {status?.git?.isClean ? (
-                <CheckCircle2 className="mr-2 h-5 w-5 text-green-500" />
-              ) : (
-                <AlertCircle className="mr-2 h-5 w-5 text-amber-500" />
-              )}
-              <p className="text-sm font-medium">
-                {status?.git?.isClean ? t('dashboard.clean') : t('dashboard.modified')}
-              </p>
-            </div>
-            {!status?.git?.isClean && (
-              <div className="mt-4 space-y-1">
-                <p className="text-sm text-muted-foreground">
-                  Modified: {status?.git?.modified?.length || 0}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Created: {status?.git?.created?.length || 0}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Deleted: {status?.git?.deleted?.length || 0}
-                </p>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="text-base font-medium">
+                  {status?.git?.isClean ? t('dashboard.clean') : t('dashboard.modified')}
+                </span>
               </div>
-            )}
+              {!status?.git?.isClean && (
+                <div className="space-y-2 pt-2 border-t border-border/40">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Modified:</span>
+                    <span className="font-medium">{status?.git?.modified?.length || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Created:</span>
+                    <span className="font-medium">{status?.git?.created?.length || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Deleted:</span>
+                    <span className="font-medium">{status?.git?.deleted?.length || 0}</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
         {/* File Watcher Status */}
-        <Card>
+        <Card className="group">
           <CardHeader>
             <CardTitle>{t('dashboard.fileWatcher')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center mt-2">
-              <Badge variant={status?.watcher?.isRunning ? 'success' : 'secondary'}>
+            <div className="space-y-4">
+              <Badge
+                variant={status?.watcher?.isRunning ? 'success' : 'secondary'}
+                className="text-sm px-3 py-1"
+              >
                 {status?.watcher?.isRunning
                   ? t('dashboard.running')
                   : t('dashboard.stopped')}
               </Badge>
+              {status?.watcher?.changedFiles?.length > 0 && (
+                <div className="pt-2 border-t border-border/40">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Changed files:</span>
+                    <span className="font-medium">{status.watcher.changedFiles.length}</span>
+                  </div>
+                </div>
+              )}
             </div>
-            {status?.watcher?.changedFiles?.length > 0 && (
-              <p className="text-sm text-muted-foreground mt-4">
-                Changed files: {status.watcher.changedFiles.length}
-              </p>
-            )}
           </CardContent>
         </Card>
 
         {/* Last Backup */}
-        <Card>
+        <Card className="group">
           <CardHeader>
             <CardTitle>{t('dashboard.lastBackup')}</CardTitle>
           </CardHeader>
           <CardContent>
             {status?.lastCommit ? (
-              <div className="mt-2 space-y-2">
-                <p className="text-sm text-muted-foreground">
+              <div className="space-y-3">
+                <p className="text-sm leading-relaxed">
                   {status.lastCommit.message}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(status.lastCommit.date), {
-                    addSuffix: true,
-                  })}
-                </p>
-                <p className="text-xs text-muted-foreground font-mono">
-                  {status.lastCommit.shortHash}
-                </p>
+                <div className="space-y-2 pt-2 border-t border-border/40">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">When:</span>
+                    <span className="font-medium">
+                      {formatDistanceToNow(new Date(status.lastCommit.date), {
+                        addSuffix: true,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Hash:</span>
+                    <code className="text-xs font-mono bg-muted px-2 py-0.5 rounded">
+                      {status.lastCommit.shortHash}
+                    </code>
+                  </div>
+                </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-sm text-muted-foreground">
                 No backups yet
               </p>
             )}
@@ -168,39 +193,41 @@ export default function Dashboard() {
         </Card>
 
         {/* Remote Sync Status */}
-        <Card>
+        <Card className="group">
           <CardHeader>
-            <CardTitle>{t('dashboard.remoteSync')}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              {status?.remote?.configured ? (
+                <CloudCheck className="h-5 w-5 text-green-500" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-amber-500" />
+              )}
+              {t('dashboard.remoteSync')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center mt-2">
-              {status?.remote?.configured ? (
-                <>
-                  <CloudCheck className="mr-2 h-5 w-5 text-green-500" />
-                  <p className="text-sm font-medium">{t('dashboard.configured')}</p>
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="mr-2 h-5 w-5 text-amber-500" />
-                  <p className="text-sm font-medium">{t('dashboard.notConfigured')}</p>
-                </>
+            <div className="space-y-4">
+              <span className="text-base font-medium">
+                {status?.remote?.configured ? t('dashboard.configured') : t('dashboard.notConfigured')}
+              </span>
+              {status?.remote?.configured && (
+                <div className="space-y-2 pt-2 border-t border-border/40">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Pending pushes:</span>
+                    <span className="font-medium">{status.remote.pendingPushes || 0}</span>
+                  </div>
+                  {status.remote.lastPush && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Last push:</span>
+                      <span className="font-medium">
+                        {formatDistanceToNow(new Date(status.remote.lastPush), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-            {status?.remote?.configured && (
-              <div className="mt-4 space-y-1">
-                <p className="text-sm text-muted-foreground">
-                  Pending pushes: {status.remote.pendingPushes || 0}
-                </p>
-                {status.remote.lastPush && (
-                  <p className="text-xs text-muted-foreground">
-                    Last push:{' '}
-                    {formatDistanceToNow(new Date(status.remote.lastPush), {
-                      addSuffix: true,
-                    })}
-                  </p>
-                )}
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
