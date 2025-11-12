@@ -1,6 +1,6 @@
 {
   "name": "homeguardian-ui",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "HACS frontend integration for HomeGuardian - Icon-based version control UI",
   "main": "custom_components/homeguardian_ui/www/dist/homeguardian-ui.js",
   "scripts": {

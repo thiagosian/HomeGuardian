@@ -1,3 +1,10 @@
+## [5.0.0](https://github.com/thiagosian/HomeGuardian/compare/v4.0.0...v5.0.0) (2025-11-12)
+
+
+### Features
+
+* implement robust git lock and heap memory management ([1615b18](https://github.com/thiagosian/HomeGuardian/commit/1615b18f29cf9723ded447ff42f8970ea78649b1))
+
 ## [4.0.0](https://github.com/thiagosian/HomeGuardian/compare/v3.0.0...v4.0.0) (2025-11-12)
 
 
