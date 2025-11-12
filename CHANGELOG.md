@@ -1,3 +1,10 @@
+## [4.0.0](https://github.com/thiagosian/HomeGuardian/compare/v3.0.0...v4.0.0) (2025-11-12)
+
+
+### Features
+
+* comprehensive code quality and security improvements for v3.0.0 ([7cfc886](https://github.com/thiagosian/HomeGuardian/commit/7cfc8862043c5782305da225152828683cf35dba))
+
 ## [3.0.0](https://github.com/thiagosian/HomeGuardian/compare/v2.0.0...v3.0.0) (2025-11-08)
 
 
