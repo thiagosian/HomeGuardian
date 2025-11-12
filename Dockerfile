@@ -51,6 +51,7 @@ COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
 
 # Copy backend source
 COPY backend/*.js ./backend/
+COPY backend/core ./backend/core
 COPY backend/routes ./backend/routes
 COPY backend/services ./backend/services
 COPY backend/middleware ./backend/middleware
@@ -58,6 +59,9 @@ COPY backend/utils ./backend/utils
 COPY backend/config ./backend/config
 COPY backend/migrations ./backend/migrations
 COPY backend/validation ./backend/validation
+COPY backend/bootstrap ./backend/bootstrap
+COPY backend/parsers ./backend/parsers
+COPY backend/repositories ./backend/repositories
 
 # Copy run script
 COPY run.sh /
